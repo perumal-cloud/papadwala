@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice Download Test</title>
+</head>
+<body>
+    <h1>Invoice Download Test</h1>
+    
+    <div>
+        <h3>Step 1: Test Authentication</h3>
+        <button onclick="testAuth()">Test Auth</button>
+        <div id="authResult"></div>
+    </div>
+    
+    <div>
+        <h3>Step 2: Test Invoice Download</h3>
+        <input type="text" id="orderNumber" placeholder="Enter order number (e.g., ORD-2025-11-8)" value="ORD-2025-11-8">
+        <button onclick="testInvoice()">Test Invoice</button>
+        <div id="invoiceResult"></div>
+    </div>
+
+    <script>
+        async function testAuth() {
+            const token = localStorage.getItem('accessToken');
+            const resultDiv = document.getElementById('authResult');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<p style="color: red;">No access token found in localStorage. Please log in first.</p>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/test-auth', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p style="color: green;">✅ Authentication successful!</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p style="color: red;">❌ Authentication failed!</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Network error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testInvoice() {
+            const token = localStorage.getItem('accessToken');
+            const orderNumber = document.getElementById('orderNumber').value;
+            const resultDiv = document.getElementById('invoiceResult');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<p style="color: red;">No access token found. Please test auth first.</p>';
+                return;
+            }
+            
+            if (!orderNumber) {
+                resultDiv.innerHTML = '<p style="color: red;">Please enter an order number.</p>';
+                return;
+            }
+            
+            try {
+                console.log('Testing invoice for order:', orderNumber);
+                const response = await fetch(`/api/orders/${orderNumber}/invoice`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType?.includes('application/pdf')) {
+                        const blob = await response.blob();
+                        resultDiv.innerHTML = `
+                            <p style="color: green;">✅ PDF generated successfully!</p>
+                            <p>Size: ${blob.size} bytes</p>
+                        `;
+                        
+                        // Actually download it
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `test-invoice-${orderNumber}.pdf`;
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                    } else {
+                        const text = await response.text();
+                        resultDiv.innerHTML = `
+                            <p style="color: teal;">⚠️ Unexpected content type: ${contentType}</p>
+                            <pre>${text}</pre>
+                        `;
+                    }
+                } else {
+                    const data = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+                    resultDiv.innerHTML = `
+                        <p style="color: red;">❌ Invoice generation failed!</p>
+                        <p>Status: ${response.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Network error: ${error.message}</p>`;
+                console.error('Invoice test error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

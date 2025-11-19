@@ -1,0 +1,7 @@
+<!-- Simple SVG placeholder for products without images -->
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#f3f4f6"/>
+  <path d="M70 70h60v60H70V70z" fill="#d1d5db"/>
+  <path d="M80 80l20 20 20-20" stroke="#9ca3af" stroke-width="2" fill="none"/>
+  <circle cx="90" cy="90" r="5" fill="#9ca3af"/>
+</svg>
