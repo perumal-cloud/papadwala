@@ -146,18 +146,18 @@ export async function POST(request: NextRequest) {
 
     console.log('Order created successfully, ID:', order._id);
 
-    // Send order confirmation email
+    // Send order placed email (not confirmation - that comes after admin confirms)
     try {
-      await emailService.sendOrderConfirmationEmail(user.email, {
+      await emailService.sendOrderPlacedEmail(user.email, {
         orderNumber: order.orderNumber,
         customerName: user.name || 'Customer',
         items: order.items,
         total: order.total,
         shippingAddress: order.shippingAddress
       });
-      console.log('Order confirmation email sent successfully');
+      console.log('Order placed email sent successfully');
     } catch (emailError) {
-      console.error('Error sending order confirmation email:', emailError);
+      console.error('Error sending order placed email:', emailError);
       // Don't fail the order creation if email fails
     }
 

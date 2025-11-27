@@ -4,6 +4,7 @@ import { connectDB } from '../../../../../lib/database';
 import { Order } from '../../../../../lib/models';
 import { TokenUtils } from '../../../../../lib/auth/utils';
 import { ORDER_STATUSES, isValidStatusTransition, type OrderStatus } from '../../../../../lib/constants/orderStatus';
+import { emailService } from '../../../../../lib/services';
 
 // Helper function to verify admin authentication
 async function verifyAdminAuth(request: NextRequest) {
@@ -120,6 +121,9 @@ export async function PATCH(
       console.warn(`Admin ${adminUser.userId} performed invalid status transition from ${order.status} to ${status} for order ${order.orderNumber}`);
     }
 
+    // Store previous status for email logic
+    const previousStatus = order.status;
+
     // Update order status using enhanced method
     if (status && status !== order.status) {
       // Validate expectedDelivery date if provided
@@ -148,6 +152,29 @@ export async function PATCH(
           },
           adminNotes
         });
+
+        // Send order confirmation email when status changes to 'confirmed'
+        if (previousStatus === 'pending' && status === 'confirmed') {
+          try {
+            // Populate userId to get user details
+            await order.populate('userId', 'name email');
+            const user = order.userId as any;
+            
+            if (user && user.email) {
+              await emailService.sendOrderConfirmationEmail(user.email, {
+                orderNumber: order.orderNumber,
+                customerName: user.name || 'Customer',
+                items: order.items,
+                total: order.total,
+                shippingAddress: order.shippingAddress
+              });
+              console.log('Order confirmation email sent successfully to:', user.email);
+            }
+          } catch (emailError) {
+            console.error('Error sending order confirmation email:', emailError);
+            // Don't fail the status update if email fails
+          }
+        }
       } catch (updateError: any) {
         console.error('Error updating order status:', {
           orderId: order._id,

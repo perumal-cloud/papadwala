@@ -50,7 +50,33 @@ export class EmailService {
     }
   }
 
-  // Send order confirmation email
+  // Send order placed email (when customer places order)
+  async sendOrderPlacedEmail(
+    email: string,
+    orderDetails: {
+      orderNumber: string;
+      customerName: string;
+      items: Array<{ name: string; quantity: number; price: number }>;
+      total: number;
+      shippingAddress: any;
+    }
+  ): Promise<void> {
+    const mailOptions = {
+      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM}>`,
+      to: email,
+      subject: `Order Placed - ${orderDetails.orderNumber}`,
+      html: this.getOrderPlacedTemplate(orderDetails),
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error('Error sending order placed email:', error);
+      throw new Error('Failed to send order placed email');
+    }
+  }
+
+  // Send order confirmation email (when admin confirms order)
   async sendOrderConfirmationEmail(
     email: string,
     orderDetails: {
@@ -64,7 +90,7 @@ export class EmailService {
     const mailOptions = {
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM}>`,
       to: email,
-      subject: `Order Confirmation - ${orderDetails.orderNumber}`,
+      subject: `Order Confirmed - ${orderDetails.orderNumber}`,
       html: this.getOrderConfirmationTemplate(orderDetails),
     };
 
@@ -298,6 +324,93 @@ export class EmailService {
     `;
   }
 
+  private getOrderPlacedTemplate(orderDetails: any): string {
+    const itemsHtml = orderDetails.items.map((item: any) => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₹${(item.price * item.quantity).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Order Placed</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #007bff; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: white; padding: 30px; border: 1px solid #ddd; }
+            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: #666; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th { background-color: #f8f9fa; padding: 12px; text-align: left; font-weight: bold; }
+            .total { font-weight: bold; font-size: 18px; color: #007bff; }
+            .info-box { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📝 Order Placed Successfully!</h1>
+              <h2>Order #${orderDetails.orderNumber}</h2>
+            </div>
+            <div class="content">
+              <p>Hello ${orderDetails.customerName},</p>
+              <p>Thank you for your order! We have received your order and it is currently being reviewed.</p>
+              
+              <div class="info-box">
+                <strong>⏳ Pending Confirmation</strong><br>
+                Your order is waiting for admin confirmation. You will receive another email once your order is confirmed and ready to be processed.
+              </div>
+              
+              <h3>Order Details:</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th style="text-align: center;">Quantity</th>
+                    <th style="text-align: right;">Price</th>
+                    <th style="text-align: right;">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsHtml}
+                  <tr>
+                    <td colspan="3" style="padding: 15px; text-align: right; font-weight: bold;">Order Total:</td>
+                    <td style="padding: 15px; text-align: right;" class="total">₹${orderDetails.total.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <h3>Shipping Address:</h3>
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                <p><strong>${orderDetails.shippingAddress.fullName}</strong><br>
+                ${orderDetails.shippingAddress.addressLine1}<br>
+                ${orderDetails.shippingAddress.addressLine2 ? orderDetails.shippingAddress.addressLine2 + '<br>' : ''}
+                ${orderDetails.shippingAddress.city}, ${orderDetails.shippingAddress.state} ${orderDetails.shippingAddress.postalCode}<br>
+                ${orderDetails.shippingAddress.country}<br>
+                Phone: ${orderDetails.shippingAddress.phoneNumber}</p>
+              </div>
+              
+              <p><strong>Payment Method:</strong> Cash on Delivery (COD)</p>
+              
+              <p>You'll receive another email with tracking information once your order ships.</p>
+              
+              <p>Thank you for choosing Papad Store!</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 Papad Store. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
   private getOrderConfirmationTemplate(orderDetails: any): string {
     const itemsHtml = orderDetails.items.map((item: any) => `
       <tr>
@@ -313,7 +426,7 @@ export class EmailService {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Order Confirmation</title>
+          <title>Order Confirmed</title>
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -323,6 +436,7 @@ export class EmailService {
             table { width: 100%; border-collapse: collapse; margin: 20px 0; }
             th { background-color: #f8f9fa; padding: 12px; text-align: left; font-weight: bold; }
             .total { font-weight: bold; font-size: 18px; color: #28a745; }
+            .success-box { background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 5px; }
           </style>
         </head>
         <body>
@@ -333,7 +447,11 @@ export class EmailService {
             </div>
             <div class="content">
               <p>Hello ${orderDetails.customerName},</p>
-              <p>Thank you for your order! We've received your order and it's being processed.</p>
+              
+              <div class="success-box">
+                <strong>🎉 Great News!</strong><br>
+                Your order has been confirmed by our team and is now being prepared for shipment. We'll notify you once it's on the way!
+              </div>
               
               <h3>Order Details:</h3>
               <table>
