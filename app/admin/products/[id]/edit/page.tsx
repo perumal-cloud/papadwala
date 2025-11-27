@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-toastify';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -254,7 +255,7 @@ export default function EditProductPage() {
 
   const uploadImages = async () => {
     if (selectedFiles.length === 0) {
-      alert('Please select files to upload');
+      toast.error('Please select files to upload');
       return;
     }
 
@@ -295,14 +296,14 @@ export default function EditProductPage() {
         const fileInput = document.getElementById('imageFiles') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
         
-        alert(`Successfully uploaded ${uploadedUrls.length} image(s)`);
+        toast.success(`Successfully uploaded ${uploadedUrls.length} image(s)`);
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to upload images');
+        toast.error(error.error || 'Failed to upload images');
       }
     } catch (error) {
       console.error('Error uploading images:', error);
-      alert('Failed to upload images');
+      toast.error('Failed to upload images');
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -314,7 +315,7 @@ export default function EditProductPage() {
     
     // Validate description length
     if (formData.description.trim().length < 10) {
-      alert('Description must be at least 10 characters long');
+      toast.error('Description must be at least 10 characters long');
       return;
     }
     
@@ -357,11 +358,11 @@ export default function EditProductPage() {
         router.push('/admin/products');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to update product');
+        toast.error(error.error || 'Failed to update product');
       }
     } catch (error) {
       console.error('Error updating product:', error);
-      alert('Failed to update product');
+      toast.error('Failed to update product');
     } finally {
       setIsSaving(false);
     }

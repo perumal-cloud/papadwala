@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { CartEvents } from '@/lib/auth/cartEvents';
+import { toast } from 'react-toastify';
 
 interface CartItem {
   _id: string;
@@ -98,11 +99,11 @@ export default function CartPage() {
         CartEvents.dispatchQuantityUpdated(productId, quantity, cartData);
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to update cart');
+        toast.error(error.error || 'Failed to update cart');
       }
     } catch (error) {
       console.error('Failed to update cart:', error);
-      alert('Failed to update cart');
+      toast.error('Failed to update cart');
     } finally {
       setIsUpdating(false);
     }
@@ -141,11 +142,11 @@ export default function CartPage() {
         CartEvents.dispatchItemRemoved(productId, cartData);
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to remove item');
+        toast.error(error.error || 'Failed to remove item');
       }
     } catch (error) {
       console.error('Failed to remove item:', error);
-      alert('Failed to remove item');
+      toast.error('Failed to remove item');
     } finally {
       setIsUpdating(false);
     }

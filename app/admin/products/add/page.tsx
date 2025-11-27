@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-toastify';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -150,7 +151,7 @@ export default function AddProductPage() {
 
   const uploadImagesToCloudinary = async () => {
     if (selectedImages.length === 0) {
-      alert('Please select files to upload');
+      toast.error('Please select files to upload');
       return;
     }
 
@@ -188,14 +189,14 @@ export default function AddProductPage() {
         const fileInput = document.getElementById('imageFiles') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
         
-        alert(`Successfully uploaded ${uploadedUrls.length} image(s) to Cloudinary`);
+        toast.success(`Successfully uploaded ${uploadedUrls.length} image(s) to Cloudinary`);
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to upload images');
+        toast.error(error.error || 'Failed to upload images');
       }
     } catch (error) {
       console.error('Error uploading images:', error);
-      alert('Failed to upload images');
+      toast.error('Failed to upload images');
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -253,13 +254,13 @@ export default function AddProductPage() {
     
     // Validate description length
     if (formData.description.trim().length < 10) {
-      alert('Description must be at least 10 characters long');
+      toast.error('Description must be at least 10 characters long');
       return;
     }
     
     const totalImages = getTotalImageCount();
     if (totalImages === 0) {
-      alert('Please select at least one product image or upload images to Cloudinary');
+      toast.error('Please select at least one product image or upload images to Cloudinary');
       return;
     }
     
@@ -309,11 +310,11 @@ export default function AddProductPage() {
         router.push('/admin/products');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to create product');
+        toast.error(error.error || 'Failed to create product');
       }
     } catch (error) {
       console.error('Error creating product:', error);
-      alert('Failed to create product');
+      toast.error('Failed to create product');
     } finally {
       setIsLoading(false);
     }

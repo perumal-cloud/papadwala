@@ -9,6 +9,7 @@ import {
   type OrderStatus 
 } from '@/lib/constants/orderStatus';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
 
 interface TrackingInfo {
   trackingNumber?: string;
@@ -146,11 +147,11 @@ export default function AdminOrders() {
       } else {
         const error = await response.json();
         console.error('Failed to update order status:', error);
-        alert('Failed to update order status');
+        toast.error('Failed to update order status');
       }
     } catch (error) {
       console.error('Failed to update order status:', error);
-      alert('Failed to update order status');
+      toast.error('Failed to update order status');
     }
   };
 
@@ -176,11 +177,11 @@ export default function AdminOrders() {
       } else {
         const error = await response.json();
         console.error('Failed to update payment status:', error);
-        alert(`Failed to update payment status: ${error.error}`);
+        toast.error(`Failed to update payment status: ${error.error}`);
       }
     } catch (error) {
       console.error('Failed to update payment status:', error);
-      alert('Failed to update payment status');
+      toast.error('Failed to update payment status');
     }
   };
 

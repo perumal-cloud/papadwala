@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-toastify';
 
 import { useEffect, useState } from 'react';
 import { ApiClient } from '@/lib/auth/ApiClient';
@@ -308,11 +309,11 @@ export default function AdminOrders() {
         setOrders(data.orders || []);
       } else {
         console.error('Failed to fetch orders');
-        alert('Failed to fetch orders');
+        toast.error('Failed to fetch orders');
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
-      alert('Error fetching orders');
+      toast.error('Error fetching orders');
     } finally {
       setLoading(false);
     }
@@ -349,11 +350,11 @@ export default function AdminOrders() {
       } else {
         const error = await response.json();
         console.error('Failed to update order status:', error);
-        alert(`Failed to update order status: ${error.error}`);
+        toast.error(`Failed to update order status: ${error.error}`);
       }
     } catch (error) {
       console.error('Failed to update order status:', error);
-      alert('Failed to update order status');
+      toast.error('Failed to update order status');
     }
   };
 
@@ -384,11 +385,11 @@ export default function AdminOrders() {
       } else {
         const error = await response.json();
         console.error('Failed to update payment status:', error);
-        alert(`Failed to update payment status: ${error.error}`);
+        toast.error(`Failed to update payment status: ${error.error}`);
       }
     } catch (error) {
       console.error('Failed to update payment status:', error);
-      alert('Failed to update payment status');
+      toast.error('Failed to update payment status');
     }
   };
 

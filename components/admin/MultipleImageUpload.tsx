@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-toastify';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
@@ -75,7 +76,7 @@ export default function MultipleImageUpload({
     });
 
     if (errors.length > 0) {
-      alert(`Some files were skipped:\n${errors.join('\n')}`);
+      toast.error(`Some files were skipped:\n${errors.join('\n')}`);
     }
 
     if (validFiles.length > 0) {

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { CartEvents } from '@/lib/auth/cartEvents';
 import Link from 'next/link';
 import LoginModal from '@/components/modals/LoginModal';
+import { toast } from 'react-toastify';
 
 interface Product {
   _id: string;
@@ -104,19 +105,18 @@ export default function ProductDetailPage() {
         };
         CartEvents.dispatchItemAdded(product._id, quantity, cartData);
         
-        alert('Product added to cart successfully!');
-        // You could also show a toast notification here
+        toast.success('Product added to cart successfully!');
       } else if (response.status === 401) {
         // Token is invalid or expired
         localStorage.removeItem('accessToken');
         setShowLoginModal(true);
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to add to cart');
+        toast.error(error.error || 'Failed to add to cart');
       }
     } catch (error) {
       console.error('Failed to add to cart:', error);
-      alert('Failed to add to cart');
+      toast.error('Failed to add to cart');
     } finally {
       setIsAddingToCart(false);
     }

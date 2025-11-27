@@ -185,6 +185,23 @@ export class EmailService {
     }
   }
 
+  // Send newsletter subscription confirmation email
+  async sendNewsletterConfirmationEmail(email: string): Promise<void> {
+    const mailOptions = {
+      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM}>`,
+      to: email,
+      subject: 'Welcome to Papad Store Newsletter!',
+      html: this.getNewsletterConfirmationTemplate(email),
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error('Error sending newsletter confirmation email:', error);
+      throw new Error('Failed to send newsletter confirmation email');
+    }
+  }
+
   // Email templates
   private getOTPEmailTemplate(otp: string, name: string): string {
     return `
@@ -606,7 +623,7 @@ export class EmailService {
               
               <p>If you have an urgent inquiry, you can also reach us at:</p>
               <ul>
-                <li>📞 Phone: +91 98765 43210</li>
+                <li>📞 Phone: +91 63698 90217</li>
                 <li>📧 Email: info@papadshop.com</li>
               </ul>
               
@@ -614,6 +631,88 @@ export class EmailService {
             </div>
             <div class="footer">
               <p>&copy; 2024 Papad Store. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  // Newsletter confirmation email template
+  private getNewsletterConfirmationTemplate(email: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Welcome to Our Newsletter</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #14b8a6; color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: white; padding: 30px; border: 1px solid #ddd; }
+            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 14px; color: #666; }
+            .benefits { background-color: #f0fdfa; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #14b8a6; }
+            .cta-button { display: inline-block; padding: 12px 30px; background-color: #14b8a6; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+            .social-links { text-align: center; margin: 20px 0; }
+            .social-links a { display: inline-block; margin: 0 10px; color: #14b8a6; text-decoration: none; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 Welcome to Papad Store Newsletter!</h1>
+            </div>
+            <div class="content">
+              <p>Hello!</p>
+              <p>Thank you for subscribing to the Papad Store newsletter! We're excited to have you join our community of papad lovers.</p>
+              
+              <div class="benefits">
+                <h3>📬 What You'll Receive:</h3>
+                <ul>
+                  <li>✨ Exclusive offers and special discounts</li>
+                  <li>🆕 First look at new product launches</li>
+                  <li>👨‍🍳 Traditional papad recipes and cooking tips</li>
+                  <li>🎁 Special birthday and festival offers</li>
+                  <li>📦 Updates on seasonal collections</li>
+                </ul>
+              </div>
+              
+              <p>As a welcome gift, here's a special offer just for you:</p>
+              <p style="text-align: center; font-size: 18px; color: #14b8a6; font-weight: bold;">
+                🎁 Use code <strong style="background-color: #f0fdfa; padding: 5px 10px; border-radius: 3px;">WELCOME10</strong> for 10% off your first order!
+              </p>
+              
+              <div style="text-align: center;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/products" class="cta-button">
+                  Start Shopping
+                </a>
+              </div>
+              
+              <p>Don't want to miss out? Follow us on social media for daily updates and behind-the-scenes content!</p>
+              
+              <div class="social-links">
+                <a href="#">Facebook</a> |
+                <a href="#">Instagram</a> |
+                <a href="#">Twitter</a>
+              </div>
+              
+              <p style="margin-top: 30px;">If you have any questions or need assistance, feel free to reach out to us at:</p>
+              <ul>
+                <li>📧 Email: ${process.env.EMAIL_FROM || 'info@papadshop.com'}</li>
+                <li>📞 Phone: +91 98765 43210</li>
+              </ul>
+              
+              <p style="font-size: 12px; color: #666; margin-top: 30px;">
+                You're receiving this email because you subscribed to our newsletter at ${process.env.NEXT_PUBLIC_APP_URL || 'papadshop.com'}. 
+                If you wish to unsubscribe, you can do so at any time by clicking the unsubscribe link in our emails.
+              </p>
+              
+              <p>Happy Shopping!<br><strong>The Papad Store Team</strong></p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} Papad Store. All rights reserved.</p>
+              <p>Handcrafted with ❤️ | Made with Love</p>
             </div>
           </div>
         </body>

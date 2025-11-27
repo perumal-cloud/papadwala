@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ApiClient } from '@/lib/auth/ApiClient';
+import { toast } from 'react-toastify';
 
 interface Category {
   _id: string;
@@ -66,17 +67,18 @@ export default function AdminCategoriesPage() {
         setCategories([...categories, data.category]);
         setNewCategory({ name: '', description: '' });
         setShowAddForm(false);
+        toast.success('Category added successfully');
       } else {
         const error = await response.json();
         console.error('Category creation error:', error);
-        alert(`Failed to add category: ${error.error || 'Unknown error'}`);
+        toast.error(`Failed to add category: ${error.error || 'Unknown error'}`);
         if (error.details) {
           console.error('Validation details:', error.details);
         }
       }
     } catch (error) {
       console.error('Error adding category:', error);
-      alert('Failed to add category');
+      toast.error('Failed to add category');
     } finally {
       setIsAddingCategory(false);
     }
@@ -92,20 +94,21 @@ export default function AdminCategoriesPage() {
           cat._id === categoryId ? data.category : cat
         ));
         setEditingCategory(null);
+        toast.success('Category updated successfully');
       } else {
         const error = await response.json();
         console.error('Category update error:', error);
         
         // Provide more detailed error messages
         if (error.details && Array.isArray(error.details)) {
-          alert(`Failed to update category: ${error.details.join(', ')}`);
+          toast.error(`Failed to update category: ${error.details.join(', ')}`);
         } else {
-          alert(error.error || 'Failed to update category');
+          toast.error(error.error || 'Failed to update category');
         }
       }
     } catch (error) {
       console.error('Error updating category:', error);
-      alert('Failed to update category. Please try again.');
+      toast.error('Failed to update category. Please try again.');
     }
   };
 
@@ -123,13 +126,14 @@ export default function AdminCategoriesPage() {
 
       if (response.ok) {
         setCategories(categories.filter(cat => cat._id !== categoryId));
+        toast.success('Category deleted successfully');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to delete category');
+        toast.error(error.error || 'Failed to delete category');
       }
     } catch (error) {
       console.error('Error deleting category:', error);
-      alert('Failed to delete category');
+      toast.error('Failed to delete category');
     }
   };
 

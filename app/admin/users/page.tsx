@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ApiClient } from '@/lib/auth/ApiClient';
+import { toast } from 'react-toastify';
 
 interface User {
   _id: string;
@@ -69,14 +70,15 @@ export default function AdminUsers() {
               : user
           )
         );
+        toast.success('User status updated successfully');
       } else {
         const error = await response.json();
         console.error('Failed to update user status:', error);
-        alert('Failed to update user status');
+        toast.error('Failed to update user status');
       }
     } catch (error) {
       console.error('Failed to update user status:', error);
-      alert('Failed to update user status');
+      toast.error('Failed to update user status');
     }
   };
 
@@ -94,14 +96,15 @@ export default function AdminUsers() {
             user._id === userId ? { ...user, role: newRole } : user
           )
         );
+        toast.success('User role updated successfully');
       } else {
         const error = await response.json();
         console.error('Failed to update user role:', error);
-        alert('Failed to update user role');
+        toast.error('Failed to update user role');
       }
     } catch (error) {
       console.error('Failed to update user role:', error);
-      alert('Failed to update user role');
+      toast.error('Failed to update user role');
     }
   };
 

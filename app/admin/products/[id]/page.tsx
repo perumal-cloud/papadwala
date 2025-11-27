@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-toastify';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -100,11 +101,11 @@ export default function AdminProductViewPage() {
         setProduct(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to update product status');
+        toast.error(error.error || 'Failed to update product status');
       }
     } catch (error) {
       console.error('Error updating product status:', error);
-      alert('Failed to update product status');
+      toast.error('Failed to update product status');
     }
   };
 
@@ -119,15 +120,15 @@ export default function AdminProductViewPage() {
       const response = await ApiClient.delete(`/api/products/${product._id}`);
 
       if (response.ok) {
-        alert('Product deleted successfully');
+        toast.success('Product deleted successfully');
         router.push('/admin/products');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to delete product');
+        toast.error(error.error || 'Failed to delete product');
       }
     } catch (error) {
       console.error('Error deleting product:', error);
-      alert('Failed to delete product');
+      toast.error('Failed to delete product');
     }
   };
 

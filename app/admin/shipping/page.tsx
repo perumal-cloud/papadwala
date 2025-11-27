@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ApiClient } from '@/lib/auth/ApiClient';
+import { toast } from 'react-toastify';
 
 interface ShippingMethod {
   _id?: string;
@@ -102,7 +103,7 @@ export default function AdminShipping() {
   const createShippingZone = async () => {
     try {
       if (!newZone.name || !newZone.regions || newZone.regions.length === 0) {
-        alert('Zone name and at least one region are required');
+        toast.error('Zone name and at least one region are required');
         return;
       }
 
@@ -119,13 +120,14 @@ export default function AdminShipping() {
           priority: 0
         });
         setShowAddZone(false);
+        toast.success('Shipping zone created successfully');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to create shipping zone');
+        toast.error(error.error || 'Failed to create shipping zone');
       }
     } catch (error) {
       console.error('Failed to create shipping zone:', error);
-      alert('Failed to create shipping zone');
+      toast.error('Failed to create shipping zone');
     }
   };
 
@@ -144,20 +146,21 @@ export default function AdminShipping() {
 
       if (response.ok) {
         await fetchShippingData();
+        toast.success('Shipping zone deleted successfully');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to delete shipping zone');
+        toast.error(error.error || 'Failed to delete shipping zone');
       }
     } catch (error) {
       console.error('Failed to delete shipping zone:', error);
-      alert('Failed to delete shipping zone');
+      toast.error('Failed to delete shipping zone');
     }
   };
 
   const addMethodToZone = async () => {
     try {
       if (!selectedZoneId || !newMethod.name || !newMethod.price) {
-        alert('Zone, method name, and price are required');
+        toast.error('Zone, method name, and price are required');
         return;
       }
 
@@ -193,13 +196,14 @@ export default function AdminShipping() {
         });
         setShowAddMethod(false);
         setSelectedZoneId('');
+        toast.success('Shipping method added successfully');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to add shipping method');
+        toast.error(error.error || 'Failed to add shipping method');
       }
     } catch (error) {
       console.error('Failed to add shipping method:', error);
-      alert('Failed to add shipping method');
+      toast.error('Failed to add shipping method');
     }
   };
 
@@ -215,13 +219,14 @@ export default function AdminShipping() {
 
       if (response.ok) {
         await fetchShippingData();
+        toast.success('Zone status updated successfully');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to update zone status');
+        toast.error(error.error || 'Failed to update zone status');
       }
     } catch (error) {
       console.error('Failed to update zone status:', error);
-      alert('Failed to update zone status');
+      toast.error('Failed to update zone status');
     }
   };
 
@@ -240,13 +245,14 @@ export default function AdminShipping() {
 
       if (response.ok) {
         await fetchShippingData();
+        toast.success('Method status updated successfully');
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to update method status');
+        toast.error(error.error || 'Failed to update method status');
       }
     } catch (error) {
       console.error('Failed to update method status:', error);
-      alert('Failed to update method status');
+      toast.error('Failed to update method status');
     }
   };
 

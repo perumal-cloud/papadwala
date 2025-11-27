@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 interface OrderItem {
   productId?: {
@@ -126,7 +127,7 @@ export default function OrdersPage() {
   const downloadInvoice = async (orderNumber: string) => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
-      alert('Please log in to download invoice');
+      toast.error('Please log in to download invoice');
       return;
     }
 
@@ -152,14 +153,14 @@ export default function OrdersPage() {
         
         if (contentType?.includes('application/json')) {
           const errorData = await response.json();
-          alert(errorData.error || 'Failed to download invoice');
+          toast.error(errorData.error || 'Failed to download invoice');
         } else {
-          alert('Failed to download invoice. Please try again.');
+          toast.error('Failed to download invoice. Please try again.');
         }
       }
     } catch (error) {
       console.error('Failed to download invoice:', error);
-      alert('Failed to download invoice. Please try again.');
+      toast.error('Failed to download invoice. Please try again.');
     }
   };
 

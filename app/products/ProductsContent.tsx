@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { CartEvents } from '@/lib/auth/cartEvents';
 import LoginModal from '@/components/modals/LoginModal';
+import { toast } from 'react-toastify';
 
 interface Product {
   _id: string;
@@ -136,18 +137,18 @@ export default function ProductsContent() {
           totalAmount: cartData.cart.totalAmount
         };
         CartEvents.dispatchItemAdded(productId, 1, cartInfo);
-        alert('Product added to cart!');
+        toast.success('Product added to cart!');
       } else if (response.status === 401) {
         // Token is invalid or expired
         localStorage.removeItem('accessToken');
         setShowLoginModal(true);
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to add product to cart');
+        toast.error(error.message || 'Failed to add product to cart');
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Failed to add product to cart');
+      toast.error('Failed to add product to cart');
     }
   };
 

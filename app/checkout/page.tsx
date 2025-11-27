@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CartEvents } from '@/lib/auth/cartEvents';
+import { toast } from 'react-toastify';
 
 const shippingSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
@@ -164,11 +165,11 @@ export default function CheckoutPage() {
         router.push(`/orders/${orderData.order.orderNumber}`);
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to place order');
+        toast.error(error.error || 'Failed to place order');
       }
     } catch (error) {
       console.error('Failed to place order:', error);
-      alert('Failed to place order');
+      toast.error('Failed to place order');
     } finally {
       setIsPlacingOrder(false);
     }

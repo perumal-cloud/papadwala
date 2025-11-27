@@ -8,6 +8,7 @@ import Testimonials from '@/components/testimonials/Testimonials';
 import ImageCarousel from '@/components/carousel/ImageCarousel';
 import ProductCarousel from '@/components/carousel/ProductCarousel';
 import ImageGallery from '@/components/gallery/ImageGallery';
+import { toast } from 'react-toastify';
 
 
 interface Product {
@@ -41,6 +42,9 @@ export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscriptionMessage, setSubscriptionMessage] = useState('');
 
   useEffect(() => {
     fetchFeaturedProducts();
@@ -90,18 +94,59 @@ export default function HomePage() {
           totalAmount: cartData.cart.totalAmount
         };
         CartEvents.dispatchItemAdded(productId, 1, cartInfo);
-        alert('Product added to cart!');
+        toast.success('Product added to cart!');
       } else if (response.status === 401) {
         // Token is invalid or expired
         localStorage.removeItem('accessToken');
         setShowLoginModal(true);
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to add product to cart');
+        toast.error(error.message || 'Failed to add product to cart');
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Failed to add product to cart');
+      toast.error('Failed to add product to cart');
+    }
+  };
+
+  const handleNewsletterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Reset previous messages
+    setSubscriptionMessage('');
+    
+    // Validate email
+    if (!newsletterEmail || !newsletterEmail.includes('@')) {
+      setSubscriptionMessage('Please enter a valid email address');
+      return;
+    }
+
+    setIsSubscribing(true);
+
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newsletterEmail,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubscriptionMessage('Thank you for subscribing! Check your email for confirmation.');
+        setNewsletterEmail('');
+      } else {
+        setSubscriptionMessage(data.error || 'Failed to subscribe. Please try again.');
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      setSubscriptionMessage('Failed to subscribe. Please try again later.');
+    } finally {
+      setIsSubscribing(false);
     }
   };
 
@@ -276,18 +321,33 @@ export default function HomePage() {
             <p className="text-white mb-8 text-xl leading-relaxed">
               Subscribe to our newsletter and be the first to know about new products, special offers, and papad recipes.
             </p>
-            <div className="flex items-end gap-4 max-w-lg">
-              <div className="flex-1">
-                <input
-                  type="email"
-                  placeholder="Your email address"
-                  className="w-full px-0 py-3 bg-transparent text-white placeholder-white/80 border-0 border-b-2 border-white focus:outline-none focus:border-b-teal-300 focus:ring-0 text-lg"
-                />
+            <form onSubmit={handleNewsletterSubscribe} className="max-w-lg">
+              <div className="flex items-end gap-4">
+                <div className="flex-1">
+                  <input
+                    type="email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    placeholder="Your email address"
+                    className="w-full px-0 py-3 bg-transparent text-white placeholder-white/80 border-0 border-b-2 border-white focus:outline-none focus:border-b-teal-300 focus:ring-0 text-lg"
+                    disabled={isSubscribing}
+                    required
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isSubscribing}
+                  className="px-8 py-3 bg-teal-500 text-white font-semibold hover:bg-teal-600 cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isSubscribing ? 'Subscribing...' : 'Subscribe'}
+                </button>
               </div>
-              <button className="px-8 py-3 bg-teal-500 text-white font-semibold hover:bg-teal-600 cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 uppercase tracking-wide">
-                Subscribe
-              </button>
-            </div>
+              {subscriptionMessage && (
+                <p className={`mt-4 text-lg ${subscriptionMessage.includes('Thank you') ? 'text-teal-300' : 'text-red-300'}`}>
+                  {subscriptionMessage}
+                </p>
+              )}
+            </form>
           </div>
         </div>
       </section>

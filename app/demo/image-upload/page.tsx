@@ -1,4 +1,5 @@
 'use client';
+import { toast } from 'react-toastify';
 
 import { useState } from 'react';
 import ProductImageGallery from '@/components/gallery/ProductImageGallery';
@@ -24,7 +25,7 @@ export default function ImageUploadDemo() {
 
   const handleUpload = async () => {
     if (selectedImages.length === 0) {
-      alert('Please select images to upload');
+      toast.error('Please select images to upload');
       return;
     }
 
@@ -51,7 +52,7 @@ export default function ImageUploadDemo() {
               setIsUploading(false);
               setUploadProgress(0);
               
-              alert(`Successfully uploaded ${mockUrls.length} image(s)!`);
+              toast.success(`Successfully uploaded ${mockUrls.length} image(s)!`);
             }, 500);
             
             return 100;
@@ -61,7 +62,7 @@ export default function ImageUploadDemo() {
       }, 200);
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      toast.error('Upload failed. Please try again.');
       setIsUploading(false);
       setUploadProgress(0);
     }
