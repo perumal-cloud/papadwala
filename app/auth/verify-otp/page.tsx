@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AuthEvents } from '@/lib/auth/events';
+import { toast } from 'react-toastify';
 
 export default function VerifyOTPPage() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -101,7 +102,10 @@ export default function VerifyOTPPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'OTP verification failed');
+        const errorMessage = result.error || 'OTP verification failed';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
       // Store access token and dispatch login events
@@ -110,6 +114,8 @@ export default function VerifyOTPPage() {
       // Clear pending email
       sessionStorage.removeItem('pendingVerificationEmail');
       
+      toast.success('Email verified successfully! Welcome to Papad Store!');
+      
       // Small delay to ensure the event is processed before redirect
       setTimeout(() => {
         // Redirect to dashboard or home page
@@ -117,7 +123,11 @@ export default function VerifyOTPPage() {
       }, 100);
 
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      const errorMessage = err.message || 'An unexpected error occurred';
+      setError(errorMessage);
+      if (!err.message?.includes('OTP verification failed')) {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -139,16 +149,24 @@ export default function VerifyOTPPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to resend OTP');
+        const errorMessage = result.error || 'Failed to resend OTP';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
       // Reset timer
       setTimeLeft(300);
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
+      toast.success('OTP has been resent to your email!');
 
     } catch (err: any) {
-      setError(err.message || 'Failed to resend OTP');
+      const errorMessage = err.message || 'Failed to resend OTP';
+      setError(errorMessage);
+      if (!err.message?.includes('Failed to resend OTP')) {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsResending(false);
     }

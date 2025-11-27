@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AuthEvents } from '@/lib/auth/events';
+import { toast } from 'react-toastify';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -63,11 +64,15 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Login failed');
+        const errorMessage = result.error || 'Login failed';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
       // Store access token and dispatch login events
       AuthEvents.setToken(result.accessToken);
+      toast.success('Login successful! Welcome back!');
       
       // Small delay to ensure the event is processed before redirect
       setTimeout(() => {
@@ -76,7 +81,11 @@ export default function LoginPage() {
       }, 100);
 
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      const errorMessage = err.message || 'An unexpected error occurred';
+      setError(errorMessage);
+      if (!err.message?.includes('Login failed')) {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

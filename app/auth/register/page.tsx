@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -91,17 +92,26 @@ export default function RegisterPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Registration failed');
+        const errorMessage = result.error || 'Registration failed';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
       // Store email for OTP verification
       sessionStorage.setItem('pendingVerificationEmail', formData.email);
       
+      toast.success('Registration successful! Please verify your email with the OTP sent.');
+      
       // Redirect to OTP verification page
       router.push('/auth/verify-otp');
 
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      const errorMessage = err.message || 'An unexpected error occurred';
+      setError(errorMessage);
+      if (!err.message?.includes('Registration failed')) {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
