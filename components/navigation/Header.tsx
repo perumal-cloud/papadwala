@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { AuthEvents } from '@/lib/auth/events';
 import SearchBar from './SearchBar';
 import SearchModal from './SearchModal';
+import { toast } from 'react-toastify';
 
 interface User {
   id: string;
@@ -231,6 +232,7 @@ export default function Header() {
     AuthEvents.removeToken();
     setUser(null);
     setCartItems(0);
+    toast.success('Sign out successfully');
     router.push('/');
   };
 
