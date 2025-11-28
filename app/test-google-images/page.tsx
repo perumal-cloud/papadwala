@@ -4,6 +4,9 @@ import { useState } from 'react';
 import ProfilePicture from '@/components/utils/ProfilePicture';
 import SafeGoogleImage from '@/components/utils/SafeGoogleImage';
 
+// Force dynamic rendering to avoid static generation issues with proxy URLs
+export const dynamic = 'force-dynamic';
+
 export default function GoogleImageTestPage() {
   const [testUrls] = useState([
     'https://lh3.googleusercontent.com/a/ACg8ocJBkk5FIMpU9SNhZfgVWocS7oOqlK4hxTpv5AKkO3AM2Ky3EYE=s400-c',
