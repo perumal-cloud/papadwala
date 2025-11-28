@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 // GET /api/admin/users/[id] - Get detailed user information
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -160,7 +160,7 @@ export async function GET(
 // PUT /api/admin/users/[id] - Update specific user details  
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -194,7 +194,9 @@ export async function PUT(
       );
     }
 
-    const userId = params.id;
+    // Await params as it's now a Promise in Next.js 16
+    const resolvedParams = await params;
+    const userId = resolvedParams.id;
     const updates = await request.json();
 
     // Validate updates - allow more fields for individual user edit
