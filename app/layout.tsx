@@ -29,6 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="google-signin-client_id" content="595901189886-j9agg8fmtsdv1reqntu3vak998rpc1qa.apps.googleusercontent.com" />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+      </head>
       <body
         className={`${poppins.variable} antialiased min-h-screen flex flex-col font-sans`}
         cz-shortcut-listen="true"

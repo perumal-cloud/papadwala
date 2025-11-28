@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { AuthEvents } from '@/lib/auth/events';
 import SearchBar from './SearchBar';
 import SearchModal from './SearchModal';
+import SafeGoogleImage from '@/components/utils/SafeGoogleImage';
 import { toast } from 'react-toastify';
 
 interface User {
@@ -244,24 +245,47 @@ export default function Header() {
       lg: 'w-10 h-10 text-base'
     };
 
+    const sizePixels = {
+      sm: 24,
+      md: 32,
+      lg: 40
+    };
+
+    const [imageError, setImageError] = useState(false);
+
+    // Reset image error when user changes
+    useEffect(() => {
+      setImageError(false);
+    }, [user.profilePicture]);
+
+    const getImageSrc = (originalSrc: string) => {
+      // For Google images, use our proxy to avoid rate limiting
+      if (originalSrc.includes('googleusercontent.com') || originalSrc.includes('graph.google.com')) {
+        return `/api/images/proxy?url=${encodeURIComponent(originalSrc)}`;
+      }
+      return originalSrc;
+    };
+
     return (
-      <div className={`${sizeClasses[size]} bg-teal-600 rounded-full flex items-center justify-center overflow-hidden`}>
-        {user.profilePicture ? (
+      <div className={`${sizeClasses[size]} bg-teal-600 rounded-full flex items-center justify-center overflow-hidden relative`}>
+        {user.profilePicture && !imageError ? (
           <img 
-            src={user.profilePicture} 
+            src={getImageSrc(user.profilePicture)}
             alt={user.name}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              // Fallback to initials if image fails to load
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              target.nextElementSibling!.setAttribute('style', 'display: flex');
+            onError={() => {
+              console.log('Profile image failed to load:', user.profilePicture);
+              setImageError(true);
+            }}
+            onLoad={() => {
+              console.log('Profile image loaded successfully');
             }}
           />
-        ) : null}
-        <span className={`text-white font-medium ${user.profilePicture ? 'hidden' : ''}`}>
-          {user.name.charAt(0).toUpperCase()}
-        </span>
+        ) : (
+          <span className="text-white font-medium">
+            {user.name.charAt(0).toUpperCase()}
+          </span>
+        )}
       </div>
     );
   };

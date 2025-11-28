@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
+      const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as DecodedToken;
       
       if (decoded.role !== 'admin') {
         return NextResponse.json(
@@ -82,7 +82,7 @@ export async function PUT(request: NextRequest) {
     const token = authHeader.substring(7);
     
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
+      const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as DecodedToken;
       
       if (decoded.role !== 'admin') {
         return NextResponse.json(

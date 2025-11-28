@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AuthEvents } from '@/lib/auth/events';
 import { toast } from 'react-toastify';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import GoogleSignInWrapper from '@/components/auth/GoogleSignInWrapper';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -84,6 +86,53 @@ export default function LoginPage() {
       const errorMessage = err.message || 'An unexpected error occurred';
       setError(errorMessage);
       if (!err.message?.includes('Login failed')) {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast.error('Google Sign-In failed. No credential received.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/google/callback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = result.error || 'Google Sign-In failed';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      // Store access token and dispatch login events
+      AuthEvents.setToken(result.accessToken);
+      toast.success('Google Sign-In successful! Welcome!');
+      
+      // Small delay to ensure the event is processed before redirect
+      setTimeout(() => {
+        router.push('/');
+      }, 100);
+
+    } catch (err: any) {
+      const errorMessage = err.message || 'An unexpected error occurred';
+      setError(errorMessage);
+      if (!err.message?.includes('failed')) {
         toast.error(errorMessage);
       }
     } finally {
@@ -209,6 +258,31 @@ export default function LoginPage() {
                   'Sign in'
                 )}
               </button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Google Sign-In Button */}
+            <div className="flex justify-center">
+              <GoogleSignInWrapper
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  toast.error('Google Sign-In failed. Please try again.');
+                }}
+                text="signin_with"
+                theme="outline"
+                size="large"
+                shape="rectangular"
+                width="100%"
+              />
             </div>
           </div>
 

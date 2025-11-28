@@ -222,3 +222,100 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+
+// DELETE /api/admin/users - Admin only route to delete a user
+export async function DELETE(request: NextRequest) {
+  try {
+    await connectDB();
+
+    // Get token from Authorization header
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Access token required' },
+        { status: 401 }
+      );
+    }
+
+    // Verify token and check admin role
+    let decoded;
+    try {
+      decoded = TokenUtils.verifyAccessToken(token);
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Invalid or expired token' },
+        { status: 401 }
+      );
+    }
+
+    if (decoded.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if user exists and is not an admin
+    const userToDelete = await User.findById(userId);
+    if (!userToDelete) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Prevent deletion of admin users
+    if (userToDelete.role === 'admin') {
+      return NextResponse.json(
+        { error: 'Cannot delete admin users' },
+        { status: 403 }
+      );
+    }
+
+    // Prevent self-deletion
+    if (userToDelete._id.toString() === decoded.userId) {
+      return NextResponse.json(
+        { error: 'Cannot delete your own account' },
+        { status: 403 }
+      );
+    }
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    // Optionally, you might want to handle related data like orders
+    // For now, we'll keep orders for data integrity but you could:
+    // await Order.deleteMany({ userId: userId });
+
+    return NextResponse.json(
+      {
+        message: 'User deleted successfully'
+      },
+      { status: 200 }
+    );
+
+  } catch (error: any) {
+    console.error('Delete user error:', error);
+
+    return NextResponse.json(
+      { 
+        error: process.env.NODE_ENV === 'production' 
+          ? 'Internal server error' 
+          : error.message 
+      },
+      { status: 500 }
+    );
+  }
+}
