@@ -5,9 +5,16 @@ import { ArrowLeft, Shield, Eye, Lock, FileText, Mail, Phone, Calendar } from 'l
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen bg-cover bg-center bg-fixed"
+      style={{
+        backgroundImage: "url('/images/privacy.jpg')"
+      }}
+    >
+      {/* Background Overlay */}
+      <div className="min-h-screen bg-white/90 backdrop-blur-sm">
       {/* Header */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-white/80 backdrop-blur-md shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link href="/" className="inline-flex items-center text-teal-600 hover:text-teal-800">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -17,16 +24,17 @@ export default function PrivacyPolicyPage() {
       </div>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-teal-600 via-red-600 to-teal-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="relative py-40 bg-cover bg-center" style={{ backgroundImage: "url('/images/privacy.jpg')" }}>
+        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
             <Shield className="h-16 w-16 mx-auto mb-6 text-white" />
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">Privacy Policy</h1>
-            <p className="text-xl md:text-2xl max-w-3xl mx-auto">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white">Privacy Policy</h1>
+            <p className="text-xl md:text-2xl max-w-3xl mx-auto text-white">
               Your privacy is important to us. Learn how we collect, use, and protect your information.
             </p>
-            <p className="mt-4 text-lg opacity-90">
-              Last updated: November 7, 2025
+            <p className="mt-4 text-lg opacity-90 text-white">
+              Last updated: December 1, 2025
             </p>
           </div>
         </div>
@@ -43,7 +51,10 @@ export default function PrivacyPolicyPage() {
               <h2 className="text-3xl font-bold text-gray-900">Introduction</h2>
             </div>
             <p className="text-gray-600 text-lg leading-relaxed mb-4">
-              PapadShop (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+              PapadShop (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website papadshop.com and use our services.
+            </p>
+            <p className="text-gray-600 text-lg leading-relaxed mb-4">
+              We operate an e-commerce platform for authentic handcrafted papads, offering Cash on Delivery (COD) payment and secure order management services.
             </p>
             <p className="text-gray-600 text-lg leading-relaxed">
               By using our website, you consent to the data practices described in this policy. If you do not agree with this policy, please do not use our website.
@@ -62,14 +73,15 @@ export default function PrivacyPolicyPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Personal Information</h3>
-                <p className="text-gray-600 mb-3">We may collect the following personal information:</p>
+                <p className="text-gray-600 mb-3">We collect the following personal information when you use our services:</p>
                 <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
-                  <li>Name and contact information (email address, phone number)</li>
-                  <li>Billing and shipping addresses</li>
-                  <li>Payment information (processed securely by our payment providers)</li>
-                  <li>Order history and preferences</li>
-                  <li>Account credentials (username, password)</li>
-                  <li>Communication preferences</li>
+                  <li><strong>Account Registration:</strong> Name, email address, phone number, password (encrypted)</li>
+                  <li><strong>OTP Verification:</strong> Phone number for account verification via One-Time Password</li>
+                  <li><strong>Order Information:</strong> Shipping address (full name, address, city, state, postal code, landmark)</li>
+                  <li><strong>Payment Method:</strong> Cash on Delivery (COD) - No credit card or banking details are collected or stored</li>
+                  <li><strong>Order History:</strong> Past orders, order status, tracking information</li>
+                  <li><strong>Profile Information:</strong> Optional profile picture (stored on Cloudinary), delivery preferences</li>
+                  <li><strong>Newsletter:</strong> Email address if you subscribe to our newsletter</li>
                 </ul>
               </div>
 
@@ -99,14 +111,15 @@ export default function PrivacyPolicyPage() {
             
             <p className="text-gray-600 mb-4">We use the collected information for the following purposes:</p>
             <ul className="list-disc list-inside text-gray-600 space-y-3 ml-4">
-              <li><strong>Order Processing:</strong> To process and fulfill your orders, including payment processing and shipping</li>
-              <li><strong>Account Management:</strong> To create and manage your user account</li>
-              <li><strong>Customer Service:</strong> To respond to your inquiries and provide customer support</li>
-              <li><strong>Communication:</strong> To send order confirmations, shipping updates, and promotional emails (with your consent)</li>
-              <li><strong>Website Improvement:</strong> To analyze website usage and improve our services</li>
-              <li><strong>Security:</strong> To protect against fraud and ensure website security</li>
-              <li><strong>Legal Compliance:</strong> To comply with applicable laws and regulations</li>
-              <li><strong>Marketing:</strong> To send you promotional offers and product recommendations (you can opt-out anytime)</li>
+              <li><strong>Account Authentication:</strong> OTP verification via email, JWT-based session management</li>
+              <li><strong>Order Processing:</strong> To process COD orders, manage cart, calculate shipping charges (₹50 for orders below ₹500, free above ₹500)</li>
+              <li><strong>Order Fulfillment:</strong> To package and ship products to your provided address</li>
+              <li><strong>Email Notifications:</strong> Order confirmation, shipping updates, order tracking, OTP codes (via Nodemailer)</li>
+              <li><strong>Customer Support:</strong> To respond to inquiries via contact form, help with order issues</li>
+              <li><strong>Newsletter:</strong> To send product updates, offers, and papad recipes (opt-in only)</li>
+              <li><strong>Security:</strong> To prevent fraud, protect user accounts, monitor suspicious activities</li>
+              <li><strong>Website Improvement:</strong> To analyze usage patterns and improve user experience</li>
+              <li><strong>Legal Compliance:</strong> To comply with Indian laws and regulations</li>
             </ul>
           </div>
         </section>
@@ -116,26 +129,31 @@ export default function PrivacyPolicyPage() {
           <div className="bg-white rounded-lg shadow-md p-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Information Sharing and Disclosure</h2>
             
-            <p className="text-gray-600 mb-4">We may share your information in the following circumstances:</p>
+            <p className="text-gray-600 mb-4">We may share your information with third-party service providers only as necessary to operate our business:</p>
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Service Providers</h3>
-                <p className="text-gray-600">We work with third-party service providers for payment processing, shipping, email marketing, and website analytics. These providers have access to your information only to perform specific tasks on our behalf.</p>
+                <h3 className="text-lg font-semibold text-gray-900">Email Service Provider</h3>
+                <p className="text-gray-600">We use <strong>Nodemailer</strong> with SMTP to send transactional emails (OTP codes, order confirmations, shipping updates, newsletters). Your email address is shared only for email delivery purposes.</p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Image Storage</h3>
+                <p className="text-gray-600">Profile pictures and product images are stored on <strong>Cloudinary</strong>, a secure cloud-based image management service. Images are stored with appropriate privacy settings.</p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Shipping Partners</h3>
+                <p className="text-gray-600">Your shipping address and contact details are shared with our courier partners only to facilitate order delivery within India.</p>
               </div>
               
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Legal Requirements</h3>
-                <p className="text-gray-600">We may disclose your information if required by law, court order, or government investigation.</p>
+                <p className="text-gray-600">We may disclose your information if required by Indian law, court order, or government investigation.</p>
               </div>
               
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Business Transfers</h3>
-                <p className="text-gray-600">In the event of a merger, acquisition, or sale of assets, your information may be transferred to the new entity.</p>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Consent</h3>
-                <p className="text-gray-600">We may share your information with your explicit consent for specific purposes.</p>
+                <h3 className="text-lg font-semibold text-gray-900">No Sale of Data</h3>
+                <p className="text-gray-600"><strong>We do NOT sell, rent, or trade your personal information to third parties for marketing purposes.</strong></p>
               </div>
             </div>
           </div>
@@ -146,13 +164,16 @@ export default function PrivacyPolicyPage() {
           <div className="bg-white rounded-lg shadow-md p-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Data Security</h2>
             
-            <p className="text-gray-600 mb-4">We implement appropriate security measures to protect your personal information:</p>
+            <p className="text-gray-600 mb-4">We implement industry-standard security measures to protect your personal information:</p>
             <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
-              <li>SSL encryption for data transmission</li>
-              <li>Secure servers and databases</li>
-              <li>Regular security audits and updates</li>
-              <li>Access controls and employee training</li>
-              <li>Payment data is processed by PCI-compliant payment processors</li>
+              <li><strong>Password Encryption:</strong> All passwords are encrypted using bcrypt hashing algorithm before storage</li>
+              <li><strong>JWT Authentication:</strong> Secure token-based authentication with access and refresh tokens</li>
+              <li><strong>OTP Verification:</strong> Email-based OTP verification for account registration and login</li>
+              <li><strong>SSL/TLS Encryption:</strong> All data transmitted between your browser and our servers is encrypted</li>
+              <li><strong>MongoDB Security:</strong> Secure database with authentication and access controls</li>
+              <li><strong>No Payment Data Storage:</strong> We use Cash on Delivery - no credit card or banking information is collected or stored</li>
+              <li><strong>Cloudinary Security:</strong> Profile images stored on secure, industry-standard cloud infrastructure</li>
+              <li><strong>Session Management:</strong> Automatic logout after inactivity, secure cookie handling</li>
             </ul>
             
             <div className="mt-6 p-4 bg-teal-50 border-l-4 border-teal-500">
@@ -292,6 +313,7 @@ export default function PrivacyPolicyPage() {
             Contact Support
           </Link>
         </div>
+      </div>
       </div>
     </div>
   );

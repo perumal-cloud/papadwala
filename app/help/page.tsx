@@ -21,13 +21,19 @@ const faqData: FAQItem[] = [
   {
     id: '2',
     question: 'What payment methods do you accept?',
-    answer: 'We accept all major credit cards (Visa, MasterCard, American Express), debit cards, UPI payments, net banking, and digital wallets like Paytm, Google Pay, and PhonePe.',
+    answer: 'Currently, we only accept Cash on Delivery (COD). You can pay in cash when your order is delivered to your doorstep. Online payment options will be available soon.',
     category: 'payment'
   },
   {
     id: '3',
+    question: 'What are the shipping charges?',
+    answer: 'We charge ₹50 for orders below ₹500. Orders above ₹500 get FREE shipping! Standard delivery takes 3-5 business days within India.',
+    category: 'shipping'
+  },
+  {
+    id: '3a',
     question: 'How long does shipping take?',
-    answer: 'Standard shipping takes 3-5 business days within India. Express shipping takes 1-2 business days. International shipping may take 7-14 business days depending on the destination.',
+    answer: 'Standard shipping takes 3-5 business days within India. All orders are carefully packaged and shipped with trusted courier partners.',
     category: 'shipping'
   },
   {
@@ -71,6 +77,12 @@ const faqData: FAQItem[] = [
     question: 'What if my order arrives damaged?',
     answer: 'If your order arrives damaged, please contact us immediately with photos of the damaged items. We\'ll arrange for a replacement or full refund.',
     category: 'shipping'
+  },
+  {
+    id: '11',
+    question: 'What is your quality guarantee?',
+    answer: 'We guarantee 100% fresh and natural products. All papads are made with pure ingredients using traditional recipes. Every product has clear expiry dates and undergoes quality checks before shipping.',
+    category: 'products'
   }
 ];
 
@@ -112,8 +124,18 @@ export default function HelpPage() {
       </div>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-teal-600 via-red-600 to-teal-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="relative text-white overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="/images/help-center.jpg" 
+            alt="Help Center" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">Help Center</h1>
             <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-8">
@@ -156,10 +178,10 @@ export default function HelpPage() {
                 <CreditCard className="h-8 w-8 text-teal-600 mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">Payment</h3>
               </div>
-              <p className="text-gray-600 mb-4">Payment methods, billing, and transaction issues</p>
-              <a href="#payment-faq" className="text-teal-600 hover:text-teal-800 font-medium">
-                Payment Help →
-              </a>
+              <p className="text-gray-600 mb-4">Cash on Delivery - Pay when you receive your order</p>
+              <Link href="/checkout" className="text-teal-600 hover:text-teal-800 font-medium">
+                Checkout →
+              </Link>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
@@ -168,9 +190,9 @@ export default function HelpPage() {
                 <h3 className="text-lg font-semibold text-gray-900">Shipping</h3>
               </div>
               <p className="text-gray-600 mb-4">Delivery times, tracking, and shipping policies</p>
-              <a href="#shipping-faq" className="text-teal-600 hover:text-teal-800 font-medium">
-                Shipping Info →
-              </a>
+              <Link href="/track" className="text-teal-600 hover:text-teal-800 font-medium">
+                Track Order →
+              </Link>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
@@ -179,9 +201,9 @@ export default function HelpPage() {
                 <h3 className="text-lg font-semibold text-gray-900">Returns</h3>
               </div>
               <p className="text-gray-600 mb-4">Return policy, refunds, and exchange information</p>
-              <a href="#general-faq" className="text-teal-600 hover:text-teal-800 font-medium">
-                Return Policy →
-              </a>
+              <Link href="/contact" className="text-teal-600 hover:text-teal-800 font-medium">
+                Contact Us →
+              </Link>
             </div>
           </div>
         </section>

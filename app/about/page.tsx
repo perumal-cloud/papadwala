@@ -25,7 +25,7 @@ export default function AboutPage() {
         <div 
           className="relative py-40 bg-cover bg-center"
           style={{
-            backgroundImage: "url('/images/about_banner.jpg')"
+            backgroundImage: "url('/images/about.jpg')"
           }}
         >
           {/* Overlay for better text readability */}

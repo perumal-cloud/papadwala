@@ -84,13 +84,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className="text-gray-600 hover:text-teal-600 transition-colors">
-                  Shipping Info
+                <Link href="/track" className="text-gray-600 hover:text-teal-600 transition-colors">
+                  Track Order
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="text-gray-600 hover:text-teal-600 transition-colors">
-                  Returns
+                <Link href="/terms#returns" className="text-gray-600 hover:text-teal-600 transition-colors">
+                  Returns & Refunds
                 </Link>
               </li>
               <li>
