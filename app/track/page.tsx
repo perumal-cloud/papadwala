@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import Link from 'next/link';
@@ -9,10 +9,26 @@ import { ArrowLeft, Package } from 'lucide-react';
 function TrackOrderForm() {
   const [orderNumber, setOrderNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
   
   const error = searchParams?.get('error');
+
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuth = () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        // Redirect to login if not authenticated
+        router.push('/auth/login');
+      } else {
+        setIsCheckingAuth(false);
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +37,18 @@ function TrackOrderForm() {
     setIsLoading(true);
     router.push(`/track/${orderNumber.trim()}`);
   };
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
