@@ -120,24 +120,37 @@ export default function ProductCarousel({
     prevArrow: <PrevArrow />,
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 1280, // Large screens
+        settings: {
+          slidesToShow: Math.min(4, slidesToShow),
+          slidesToScroll: 1,
+          arrows: true,
+        }
+      },
+      {
+        breakpoint: 1024, // Desktop
         settings: {
           slidesToShow: Math.min(3, slidesToShow),
           slidesToScroll: 1,
+          arrows: true,
         }
       },
       {
-        breakpoint: 768,
+        breakpoint: 768, // Tablet
         settings: {
-          slidesToShow: Math.min(2, slidesToShow),
+          slidesToShow: 2,
           slidesToScroll: 1,
+          arrows: true,
         }
       },
       {
-        breakpoint: 640,
+        breakpoint: 640, // Mobile
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
+          arrows: false,
+          dots: true,
+          centerMode: false,
         }
       }
     ],
@@ -183,6 +196,32 @@ export default function ProductCarousel({
         
         .product-carousel .slick-slide {
           display: flex !important;
+        }
+        
+        /* Mobile responsive styles */
+        @media (max-width: 640px) {
+          .product-carousel .slick-slide > div {
+            padding: 0 !important;
+          }
+          
+          .product-carousel .slick-list {
+            padding: 0 16px !important;
+          }
+          
+          .product-carousel .slick-slide > div > div {
+            min-height: 450px !important;
+          }
+          
+          .product-carousel .slick-dots {
+            bottom: -40px !important;
+          }
+        }
+        
+        /* Tablet responsive styles */
+        @media (min-width: 641px) and (max-width: 768px) {
+          .product-carousel .slick-slide > div > div {
+            min-height: 480px !important;
+          }
         }
       `}</style>
       
