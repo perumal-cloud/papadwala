@@ -192,15 +192,19 @@ export default function OrdersPage() {
 
         {orders.length === 0 ? (
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M8 11v6h8v-6M8 11h8" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
-            <p className="mt-1 text-sm text-gray-500">You haven't placed any orders yet.</p>
-            <div className="mt-6">
+            <div className="mb-6">
+              <img 
+                src="/images/no-order.jpg" 
+                alt="No orders" 
+                className="mx-auto max-w-md w-full h-auto"
+              />
+            </div>
+            <h3 className="mt-6 text-xl font-semibold text-gray-900">No orders found</h3>
+            <p className="mt-2 text-base text-gray-500">You haven't placed any orders yet.</p>
+            <div className="mt-8">
               <Link
                 href="/products"
-                className="inline-flex items-center px-4 py-2 bg-teal-600 text-white font-medium rounded-md hover:bg-teal-700 transition-colors"
+                className="inline-flex items-center px-6 py-3 bg-teal-600 text-white font-medium rounded-md hover:bg-teal-700 transition-colors shadow-md"
               >
                 Start Shopping
               </Link>
