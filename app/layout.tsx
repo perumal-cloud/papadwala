@@ -10,12 +10,12 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "PapadShop - Authentic Handcrafted Papads",
+  title: "PapadWala - Authentic Handcrafted Papads",
   description: "Your trusted source for authentic, handcrafted papads. We bring you the finest quality papads made with traditional recipes and premium ingredients.",
   keywords: "papads, indian snacks, handcrafted, authentic, traditional, food, snacks",
-  authors: [{ name: "PapadShop Team" }],
+  authors: [{ name: "PapadWala Team" }],
   openGraph: {
-    title: "PapadShop - Authentic Handcrafted Papads",
+    title: "PapadWala - Authentic Handcrafted Papads",
     description: "Your trusted source for authentic, handcrafted papads.",
     type: "website",
     locale: "en_US",

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -30,6 +31,7 @@ interface ProductCarouselProps {
   slidesToShow?: number;
   autoPlay?: boolean;
   autoPlayInterval?: number;
+  onLoginRequired?: () => void;
 }
 
 // Custom Arrow Components
@@ -68,12 +70,43 @@ export default function ProductCarousel({
   onAddToCart,
   slidesToShow = 3,
   autoPlay = false,
-  autoPlayInterval = 3000
+  autoPlayInterval = 3000,
+  onLoginRequired
 }: ProductCarouselProps) {
+  const router = useRouter();
 
   if (!products || products.length === 0) {
     return null;
   }
+
+  const handleProductClick = (e: React.MouseEvent, productSlug: string) => {
+    // Check if user is logged in
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      // User not logged in, redirect to login page
+      e.preventDefault();
+      router.push('/auth/login');
+      return;
+    }
+    // If logged in, allow normal navigation to product page
+  };
+
+  const handleAddToCartClick = (e: React.MouseEvent, productId: string) => {
+    // Stop event from bubbling to parent Link
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Check if user is logged in
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      // User not logged in, redirect to login page
+      router.push('/auth/login');
+      return;
+    }
+    
+    // User is logged in, proceed with adding to cart
+    onAddToCart(productId);
+  };
 
   const settings = {
     dots: true,
@@ -162,7 +195,11 @@ export default function ProductCarousel({
           return (
             <div key={product._id} className="px-3 h-full">
               <div className="group bg-white rounded-lg overflow-hidden transition-all duration-300 flex flex-col h-[500px] border border-gray-100">
-                <Link href={`/products/${product.slug}`} className="flex flex-col h-full">
+                <Link 
+                  href={`/products/${product.slug}`} 
+                  className="flex flex-col h-full"
+                  onClick={(e) => handleProductClick(e, product.slug)}
+                >
                   {/* Image Section */}
                   <div className="relative h-70 bg-gradient-to-br from-teal-50 to-teal-100 overflow-hidden">
                     {/* Category Badge */}
@@ -196,11 +233,7 @@ export default function ProductCarousel({
                     {/* Add to Cart Button - Appears on Hover */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out z-20">
                       <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onAddToCart(product._id);
-                        }}
+                        onClick={(e) => handleAddToCartClick(e, product._id)}
                         disabled={product.stock <= 0}
                         className={`w-full flex items-center justify-center gap-2 h-12 px-4 font-semibold transition-all duration-200 ${
                           product.stock <= 0 

@@ -281,6 +281,7 @@ export default function HomePage() {
                 onAddToCart={handleAddToCart}
                 slidesToShow={3}
                 autoPlay={true}
+                onLoginRequired={() => setShowLoginModal(true)}
               />
             )}
 
