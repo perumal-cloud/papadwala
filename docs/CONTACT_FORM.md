@@ -53,7 +53,7 @@ SMTP_PASS=your-app-password
 # Email Settings
 EMAIL_FROM=your-email@gmail.com
 EMAIL_FROM_NAME=Papad Store
-ADMIN_EMAIL=admin@papadshop.com
+ADMIN_EMAIL=admin@PapadWala.com
 ```
 
 ### SMTP Setup for Gmail:

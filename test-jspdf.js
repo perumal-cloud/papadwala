@@ -77,7 +77,7 @@ function generateJsPDFTest() {
     currentY += 6;
     doc.text('Phone: +91-6369890217', margin, currentY);
     currentY += 6;
-    doc.text('Email: info@papadshop.com', margin, currentY);
+    doc.text('Email: info@PapadWala.com', margin, currentY);
     currentY += 15;
 
     // Invoice Details (right side)

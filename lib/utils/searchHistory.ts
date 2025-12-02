@@ -7,7 +7,7 @@ export interface SearchHistoryItem {
 }
 
 export class SearchHistoryManager {
-  private static readonly STORAGE_KEY = 'papadshop_search_history';
+  private static readonly STORAGE_KEY = 'PapadWala_search_history';
   private static readonly MAX_HISTORY_ITEMS = 10;
 
   // Get search history from localStorage

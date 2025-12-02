@@ -305,7 +305,7 @@ export default function TermsOfServicePage() {
                   <li>• Always log out after shopping on shared devices</li>
                   <li>• Keep your contact information updated for order notifications</li>
                   <li>• Report any suspicious activity to our support team immediately</li>
-                  <li>• Contact us at <a href="mailto:info@papadshop.com" className="text-teal-600 hover:underline">info@papadshop.com</a> or call +91 6369890217 for security concerns</li>
+                  <li>• Contact us at <a href="mailto:info@PapadWala.com" className="text-teal-600 hover:underline">info@PapadWala.com</a> or call +91 6369890217 for security concerns</li>
                 </ul>
               </div>
             </div>
@@ -453,8 +453,8 @@ export default function TermsOfServicePage() {
                 <Mail className="h-6 w-6 text-teal-600 mr-3 mt-1" />
                 <div>
                   <h3 className="font-semibold text-gray-900">Email</h3>
-                  <a href="mailto:info@papadshop.com" className="text-teal-600 hover:text-teal-800">
-                    info@papadshop.com
+                  <a href="mailto:info@PapadWala.com" className="text-teal-600 hover:text-teal-800">
+                    info@PapadWala.com
                   </a>
                 </div>
               </div>

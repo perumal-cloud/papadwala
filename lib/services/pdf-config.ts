@@ -25,7 +25,7 @@ export const PDF_CONFIG = {
     name: 'Papad Wala',
     address: '37/A North street annupanadi, Madurai, Tamil Nadu 625009, India',
     phone: '+91-6369890217',
-    email: 'info@papadshop.com',
+    email: 'info@PapadWala.com',
     website: 'www.papadstore.com',
     gst: 'GST123456789'
   },

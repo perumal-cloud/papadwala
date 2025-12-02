@@ -299,7 +299,7 @@ export default function Header() {
             <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-lg">P</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">PapadShop</span>
+            <span className="text-xl font-bold text-gray-900">PapadWala</span>
           </Link>
 
           {/* Desktop Search Bar */}
@@ -315,29 +315,71 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-teal-600 transition-colors">
+            <Link 
+              href="/" 
+              className={`transition-colors font-medium ${
+                pathname === '/' 
+                  ? 'text-teal-600' 
+                  : 'text-gray-700 hover:text-teal-600'
+              }`}
+            >
               Home
             </Link>
-              <Link href="/about" className="text-gray-700 hover:text-teal-600 transition-colors">
+            <Link 
+              href="/about" 
+              className={`transition-colors font-medium ${
+                pathname === '/about' 
+                  ? 'text-teal-600' 
+                  : 'text-gray-700 hover:text-teal-600'
+              }`}
+            >
               About
             </Link>
-            <Link href="/products" className="text-gray-700 hover:text-teal-600 transition-colors">
+            <Link 
+              href="/products" 
+              className={`transition-colors font-medium ${
+                pathname?.startsWith('/products') 
+                  ? 'text-teal-600' 
+                  : 'text-gray-700 hover:text-teal-600'
+              }`}
+            >
               Products
             </Link>
-            <Link href="/categories" className="text-gray-700 hover:text-teal-600 transition-colors">
+            <Link 
+              href="/categories" 
+              className={`transition-colors font-medium ${
+                pathname?.startsWith('/categories') 
+                  ? 'text-teal-600' 
+                  : 'text-gray-700 hover:text-teal-600'
+              }`}
+            >
               Categories
             </Link>
-            <Link href="/contact" className="text-gray-700 hover:text-teal-600 transition-colors">
+            <Link 
+              href="/contact" 
+              className={`transition-colors font-medium ${
+                pathname === '/contact' 
+                  ? 'text-teal-600' 
+                  : 'text-gray-700 hover:text-teal-600'
+              }`}
+            >
               Contact
             </Link>
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-10 ml-5">
             
 
             {/* Cart */}
-            <Link href="/cart" className="relative p-2 text-gray-700 hover:text-teal-600 transition-colors">
+            <Link 
+              href="/cart" 
+              className={`relative p-2 transition-colors ${
+                pathname === '/cart' 
+                  ? 'text-teal-600' 
+                  : 'text-gray-700 hover:text-teal-600'
+              }`}
+            >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h7" />
               </svg>
@@ -458,22 +500,64 @@ export default function Header() {
               />
 
               {/* Navigation Links */}
-              <Link href="/" className="text-gray-700 hover:text-teal-600 transition-colors">
+              <Link 
+                href="/" 
+                className={`transition-colors px-3 py-2 rounded-lg font-medium ${
+                  pathname === '/' 
+                    ? 'text-teal-600 bg-teal-50' 
+                    : 'text-gray-700 hover:text-teal-600 hover:bg-gray-50'
+                }`}
+              >
                 Home
               </Link>
-              <Link href="/products" className="text-gray-700 hover:text-teal-600 transition-colors">
+              <Link 
+                href="/products" 
+                className={`transition-colors px-3 py-2 rounded-lg font-medium ${
+                  pathname?.startsWith('/products') 
+                    ? 'text-teal-600 bg-teal-50' 
+                    : 'text-gray-700 hover:text-teal-600 hover:bg-gray-50'
+                }`}
+              >
                 Products
               </Link>
-              <Link href="/categories" className="text-gray-700 hover:text-teal-600 transition-colors">
+              <Link 
+                href="/categories" 
+                className={`transition-colors px-3 py-2 rounded-lg font-medium ${
+                  pathname?.startsWith('/categories') 
+                    ? 'text-teal-600 bg-teal-50' 
+                    : 'text-gray-700 hover:text-teal-600 hover:bg-gray-50'
+                }`}
+              >
                 Categories
               </Link>
-              <Link href="/about" className="text-gray-700 hover:text-teal-600 transition-colors">
+              <Link 
+                href="/about" 
+                className={`transition-colors px-3 py-2 rounded-lg font-medium ${
+                  pathname === '/about' 
+                    ? 'text-teal-600 bg-teal-50' 
+                    : 'text-gray-700 hover:text-teal-600 hover:bg-gray-50'
+                }`}
+              >
                 About
               </Link>
-              <Link href="/contact" className="text-gray-700 hover:text-teal-600 transition-colors">
+              <Link 
+                href="/contact" 
+                className={`transition-colors px-3 py-2 rounded-lg font-medium ${
+                  pathname === '/contact' 
+                    ? 'text-teal-600 bg-teal-50' 
+                    : 'text-gray-700 hover:text-teal-600 hover:bg-gray-50'
+                }`}
+              >
                 Contact
               </Link>
-              <Link href="/cart" className="flex items-center text-gray-700 hover:text-teal-600 transition-colors">
+              <Link 
+                href="/cart" 
+                className={`flex items-center transition-colors px-3 py-2 rounded-lg font-medium ${
+                  pathname === '/cart' 
+                    ? 'text-teal-600 bg-teal-50' 
+                    : 'text-gray-700 hover:text-teal-600 hover:bg-gray-50'
+                }`}
+              >
                 Cart
                 {cartItems > 0 && (
                   <span className="ml-2 bg-teal-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">

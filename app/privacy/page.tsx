@@ -51,7 +51,7 @@ export default function PrivacyPolicyPage() {
               <h2 className="text-3xl font-bold text-gray-900">Introduction</h2>
             </div>
             <p className="text-gray-600 text-lg leading-relaxed mb-4">
-              PapadShop (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website papadshop.com and use our services.
+              PapadWala (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website PapadWala.com and use our services.
             </p>
             <p className="text-gray-600 text-lg leading-relaxed mb-4">
               We operate an e-commerce platform for authentic handcrafted papads, offering Cash on Delivery (COD) payment and secure order management services.

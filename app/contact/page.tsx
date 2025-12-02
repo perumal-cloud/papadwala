@@ -121,8 +121,8 @@ export default function ContactPage() {
                   <div>
                     <h3 className="text-xl  text-gray-900 mb-2">Email Us</h3>
                     <p className="text-gray-600 mb-3">Send us an email and we'll respond within 24 hours</p>
-                    <a href="mailto:info@papadshop.com" className="text-teal-600 hover:text-teal-800 font-semibold transition-colors">
-                      info@papadshop.com
+                    <a href="mailto:info@PapadWala.com" className="text-teal-600 hover:text-teal-800 font-semibold transition-colors">
+                      info@PapadWala.com
                     </a>
                   </div>
                 </div>

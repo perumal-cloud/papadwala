@@ -66,7 +66,7 @@ export default function Custom500() {
               </svg>
             </Link>
             <a
-              href="mailto:support@papadshop.com"
+              href="mailto:support@PapadWala.com"
               className="inline-flex items-center justify-center text-teal-600 hover:text-teal-700 font-medium transition-colors bg-teal-50 hover:bg-teal-100 px-4 py-2 rounded-lg"
             >
               Email Us

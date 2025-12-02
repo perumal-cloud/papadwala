@@ -742,7 +742,7 @@ export class EmailService {
               <p>If you have an urgent inquiry, you can also reach us at:</p>
               <ul>
                 <li>📞 Phone: +91 63698 90217</li>
-                <li>📧 Email: info@papadshop.com</li>
+                <li>📧 Email: info@PapadWala.com</li>
               </ul>
               
               <p>Best regards,<br>The Papad Store Team</p>
@@ -817,12 +817,12 @@ export class EmailService {
               
               <p style="margin-top: 30px;">If you have any questions or need assistance, feel free to reach out to us at:</p>
               <ul>
-                <li>📧 Email: ${process.env.EMAIL_FROM || 'info@papadshop.com'}</li>
+                <li>📧 Email: ${process.env.EMAIL_FROM || 'info@PapadWala.com'}</li>
                 <li>📞 Phone: +91 98765 43210</li>
               </ul>
               
               <p style="font-size: 12px; color: #666; margin-top: 30px;">
-                You're receiving this email because you subscribed to our newsletter at ${process.env.NEXT_PUBLIC_APP_URL || 'papadshop.com'}. 
+                You're receiving this email because you subscribed to our newsletter at ${process.env.NEXT_PUBLIC_APP_URL || 'PapadWala.com'}. 
                 If you wish to unsubscribe, you can do so at any time by clicking the unsubscribe link in our emails.
               </p>
               

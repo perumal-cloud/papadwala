@@ -2,6 +2,7 @@
 
 import Header from "@/components/navigation/Header";
 import Footer from "@/components/navigation/Footer";
+import FloatingButtons from "@/components/utils/FloatingButtons";
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
@@ -39,6 +40,7 @@ export default function ClientLayout({
         {children}
       </main>
       {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <FloatingButtons />}
       <ToastContainer
         position="top-right"
         autoClose={3000}

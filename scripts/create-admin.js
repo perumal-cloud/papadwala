@@ -62,11 +62,11 @@ async function createAdminUser() {
     await mongoose.connect(mongoUri);
     
     // Check if admin already exists
-    const existingAdmin = await User.findOne({ email: 'admin@papadshop.com' });
+    const existingAdmin = await User.findOne({ email: 'admin@PapadWala.com' });
     
     if (existingAdmin) {
       console.log('Admin user already exists!');
-      console.log('Email: admin@papadshop.com');
+      console.log('Email: admin@PapadWala.com');
       console.log('Current role:', existingAdmin.role);
       
       // Update role to admin if not already
@@ -85,7 +85,7 @@ async function createAdminUser() {
     
     const adminUser = new User({
       name: 'Admin User',
-      email: 'admin@papadshop.com',
+      email: 'admin@PapadWala.com',
       passwordHash: passwordHash,
       role: 'admin',
       isVerified: true
@@ -94,7 +94,7 @@ async function createAdminUser() {
     await adminUser.save();
     
     console.log('✅ Admin user created successfully!');
-    console.log('📧 Email: admin@papadshop.com');
+    console.log('📧 Email: admin@PapadWala.com');
     console.log('🔑 Password: admin123');
     console.log('👑 Role: admin');
     console.log('');

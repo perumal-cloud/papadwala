@@ -39,7 +39,7 @@ class InvoiceServiceJsPDF {
     name: 'Papad Wala',
     address: '37/A North street annupanadi, Madurai, Tamil Nadu 625009, India',
     phone: '+91-6369890217',
-    email: 'info@papadshop.com',
+    email: 'info@PapadWala.com',
     website: 'www.papadstore.com',
     gst: 'GST123456789'
   };
@@ -217,7 +217,7 @@ class InvoiceServiceJsPDF {
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(100, 100, 100);
-      const footerText2 = 'For queries: info@papadshop.com | +91-6369890217';
+      const footerText2 = 'For queries: info@PapadWala.com | +91-6369890217';
       const footerWidth2 = doc.getTextWidth(footerText2);
       doc.text(footerText2, (pageWidth - footerWidth2) / 2, footerY + 5);
       
