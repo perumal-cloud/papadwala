@@ -165,14 +165,31 @@ export default function ProductsContent() {
 
   if (isLoading) {
     return (
-      <div 
-        className="min-h-screen bg-cover bg-center bg-fixed"
-      >
-        <div className="min-h-screen bg-white/95 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-teal-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          {/* Main Loading Animation */}
+          <div className="relative mb-8">
+            {/* Outer spinning ring */}
+            <div className="flex justify-center items-center">
+              <div className="w-20 h-20 border-4 border-teal-200 border-t-teal-500 rounded-full animate-spin"></div>
             </div>
+          </div>
+
+          {/* Loading Text */}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-gray-900 animate-pulse">
+              Loading Products
+            </h2>
+            <p className="text-gray-600 animate-pulse">
+              Please wait...
+            </p>
+          </div>
+
+          {/* Loading Dots */}
+          <div className="flex justify-center space-x-2 mt-6">
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
           </div>
         </div>
       </div>

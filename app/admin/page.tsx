@@ -106,10 +106,22 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <div className="relative mb-8">
+            <div className="flex justify-center items-center">
+              <div className="w-20 h-20 border-4 border-teal-200 border-t-teal-500 rounded-full animate-spin"></div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-gray-900 animate-pulse">Loading Dashboard</h2>
+            <p className="text-gray-600 animate-pulse">Please wait...</p>
+          </div>
+          <div className="flex justify-center space-x-2 mt-6">
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
         </div>
       </div>
     );
