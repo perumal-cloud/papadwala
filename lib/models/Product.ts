@@ -225,8 +225,8 @@ productSchema.pre('save', function(next) {
 productSchema.methods.getTotalStock = function(): number {
   if (!this.variants || this.variants.length === 0) return 0;
   
-  return this.variants.reduce((total, variant) => {
-    return total + variant.weights.reduce((sum, weight) => {
+  return this.variants.reduce((total: number, variant: any) => {
+    return total + variant.weights.reduce((sum: number, weight: any) => {
       return weight.isActive !== false ? sum + weight.stock : sum;
     }, 0);
   }, 0);
@@ -237,9 +237,9 @@ productSchema.methods.getMinPrice = function(): number {
   if (!this.variants || this.variants.length === 0) return 0;
   
   const activePrices: number[] = [];
-  this.variants.forEach(variant => {
+  this.variants.forEach((variant: any) => {
     if (variant.isActive !== false) {
-      variant.weights.forEach(weight => {
+      variant.weights.forEach((weight: any) => {
         if (weight.isActive !== false) {
           activePrices.push(weight.price);
         }
@@ -255,9 +255,9 @@ productSchema.methods.getMaxPrice = function(): number {
   if (!this.variants || this.variants.length === 0) return 0;
   
   const activePrices: number[] = [];
-  this.variants.forEach(variant => {
+  this.variants.forEach((variant: any) => {
     if (variant.isActive !== false) {
-      variant.weights.forEach(weight => {
+      variant.weights.forEach((weight: any) => {
         if (weight.isActive !== false) {
           activePrices.push(weight.price);
         }
