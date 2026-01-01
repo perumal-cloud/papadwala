@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -7,15 +8,30 @@ import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+interface WeightOption {
+  weight: string;
+  price: number;
+  stock: number;
+  sku?: string;
+  isActive: boolean;
+}
+
+interface SizeVariant {
+  size: string;
+  weights: WeightOption[];
+  isActive: boolean;
+}
+
 interface Product {
   _id: string;
   name: string;
   slug: string;
-  price: number;
+  price?: number;  // For old products
   compareAtPrice?: number;
   images: string[];
   description: string;
-  stock: number;
+  stock?: number;  // For old products
+  variants?: SizeVariant[];  // For new variant products
   weight?: number;
   tags: string[];
   featured: boolean;
@@ -71,9 +87,66 @@ export default function ProductCarousel({
   slidesToShow = 3,
   autoPlay = false,
   autoPlayInterval = 3000,
-  onLoginRequired
 }: ProductCarouselProps) {
   const router = useRouter();
+
+  // Helper functions for variant products
+  const getMinPrice = (product: Product): number => {
+    if (product.variants && product.variants.length > 0) {
+      const prices: number[] = [];
+      product.variants.forEach(variant => {
+        if (variant.weights && variant.weights.length > 0) {
+          variant.weights.forEach(w => prices.push(w.price));
+        }
+      });
+      return prices.length > 0 ? Math.min(...prices) : 0;
+    }
+    return product.price || 0;
+  };
+
+  const getMaxPrice = (product: Product): number => {
+    if (product.variants && product.variants.length > 0) {
+      const prices: number[] = [];
+      product.variants.forEach(variant => {
+        if (variant.weights && variant.weights.length > 0) {
+          variant.weights.forEach(w => prices.push(w.price));
+        }
+      });
+      return prices.length > 0 ? Math.max(...prices) : 0;
+    }
+    return product.price || 0;
+  };
+
+  const getTotalStock = (product: Product): number => {
+    if (product.variants && product.variants.length > 0) {
+      let total = 0;
+      product.variants.forEach(variant => {
+        if (variant.weights && variant.weights.length > 0) {
+          variant.weights.forEach(w => total += w.stock || 0);
+        }
+      });
+      return total;
+    }
+    return product.stock || 0;
+  };
+
+  const getPriceDisplay = (product: Product): React.ReactElement => {
+    const minPrice = getMinPrice(product);
+    const maxPrice = getMaxPrice(product);
+    
+    if (minPrice === maxPrice || !product.variants) {
+      return (
+        <span className="text-2xl font-bold text-gray-800">
+          ₹{minPrice}
+        </span>
+      );
+    }
+    return (
+      <span className="text-2xl font-bold text-gray-800">
+        ₹{minPrice} - ₹{maxPrice}
+      </span>
+    );
+  };
 
   if (!products || products.length === 0) {
     return null;
@@ -227,8 +300,8 @@ export default function ProductCarousel({
       
       <Slider {...settings}>
         {products.map((product) => {
-          const discountPercentage = product.compareAtPrice && product.compareAtPrice > product.price 
-            ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
+          const discountPercentage = product.compareAtPrice && product.compareAtPrice > (product.price ?? 0)
+            ? Math.round(((product.compareAtPrice - (product.price ?? 0)) / product.compareAtPrice) * 100)
             : 0;
           
           return (
@@ -273,14 +346,14 @@ export default function ProductCarousel({
                     <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out z-20">
                       <button 
                         onClick={(e) => handleAddToCartClick(e, product._id)}
-                        disabled={product.stock <= 0}
+                        disabled={getTotalStock(product) <= 0}
                         className={`w-full flex items-center justify-center gap-2 h-12 px-4 font-semibold transition-all duration-200 ${
-                          product.stock <= 0 
+                          getTotalStock(product) <= 0 
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                             : 'bg-teal-500 text-white cursor-pointer hover:bg-teal-600 transform hover:scale-105 active:scale-95'
                         }`}
                       >
-                        {product.stock <= 0 ? (
+                        {getTotalStock(product) <= 0 ? (
                           <>
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
@@ -299,7 +372,7 @@ export default function ProductCarousel({
                     </div>
 
                     {/* Stock Status Overlay */}
-                    {product.stock <= 0 && (
+                    {getTotalStock(product) <= 0 && (
                       <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-30">
                         <span className="text-white font-bold text-lg">Out of Stock</span>
                       </div>
@@ -321,13 +394,11 @@ export default function ProductCarousel({
                       <div className="flex items-center justify-between ">
                         {/* Left side - Price */}
                         <div className="text-left">
-                          <span className="text-2xl font-bold text-gray-800">
-                            ₹{product.price}
-                          </span>
-                          {product.weight && (
+                          {getPriceDisplay(product)}
+                          {product.weight && !product.variants && (
                             <span className="text-sm text-gray-500 ml-1">/ {product.weight}g</span>
                           )}
-                          {product.compareAtPrice && product.compareAtPrice > product.price && (
+                          {product.compareAtPrice && product.compareAtPrice > (product.price || 0) && !product.variants && (
                             <div className="text-sm text-gray-400 line-through">
                               ₹{product.compareAtPrice}
                             </div>
@@ -338,7 +409,7 @@ export default function ProductCarousel({
                         {discountPercentage > 0 && (
                           <div className="text-right">
                             <span className="text-xs text-green-600 font-medium bg-green-50 px-2  rounded-full">
-                              Save ₹{product.compareAtPrice! - product.price}
+                              Save ₹{product.compareAtPrice! - (product.price ?? 0)}
                             </span>
                             <div className="text-xs text-green-600 font-bold mt-1">
                               {discountPercentage}% OFF

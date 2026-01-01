@@ -1,17 +1,36 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+// Variant weight option interface
+export interface IWeightOption {
+  weight: string; // e.g., "100g", "200g", "1kg"
+  price: number;
+  stock: number;
+  sku?: string; // Auto-generated or manual SKU
+  isActive?: boolean;
+}
+
+// Size variant interface
+export interface ISizeVariant {
+  size: string; // e.g., "2.5 inch", "3.5 inch", "4.5 inch"
+  weights: IWeightOption[];
+  isActive?: boolean;
+}
+
 export interface IProduct extends Document {
   name: string;
   slug: string;
-  categoryId: mongoose.Types.ObjectId;
   description: string;
-  price: number;
-  compareAtPrice?: number;
-  stock: number;
   images: string[];
   isActive: boolean;
   featured: boolean;
-  weight?: number; // in grams
+  
+  // Variant-based structure
+  variants: ISizeVariant[];
+  
+  // Optional fields (kept for compatibility, but not used with variants)
+  categoryId?: mongoose.Types.ObjectId; // Deprecated - keeping for migration
+  
+  // Product information
   ingredients?: string[];
   nutritionInfo?: {
     calories?: number;
@@ -22,9 +41,64 @@ export interface IProduct extends Document {
     sodium?: number;
   };
   tags: string[];
+  
   createdAt: Date;
   updatedAt: Date;
+  
+  // Virtual methods
+  getTotalStock(): number;
+  getMinPrice(): number;
+  getMaxPrice(): number;
 }
+
+const weightOptionSchema = new Schema<IWeightOption>({
+  weight: {
+    type: String,
+    required: [true, 'Weight is required'],
+    trim: true
+  },
+  price: {
+    type: Number,
+    required: [true, 'Price is required'],
+    min: [0, 'Price cannot be negative']
+  },
+  stock: {
+    type: Number,
+    required: [true, 'Stock quantity is required'],
+    min: [0, 'Stock cannot be negative'],
+    default: 0
+  },
+  sku: {
+    type: String,
+    trim: true,
+    sparse: true
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+}, { _id: false });
+
+const sizeVariantSchema = new Schema<ISizeVariant>({
+  size: {
+    type: String,
+    required: [true, 'Size is required'],
+    trim: true
+  },
+  weights: {
+    type: [weightOptionSchema],
+    validate: {
+      validator: function(weights: IWeightOption[]) {
+        return weights && weights.length > 0;
+      },
+      message: 'At least one weight option is required for each size'
+    }
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+}, { _id: false });
 
 const productSchema = new Schema<IProduct>({
   name: {
@@ -44,38 +118,12 @@ const productSchema = new Schema<IProduct>({
       'Slug must contain only lowercase letters, numbers, and hyphens'
     ]
   },
-  categoryId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Category',
-    required: [true, 'Category is required']
-  },
   description: {
     type: String,
     required: [true, 'Product description is required'],
     trim: true,
     minlength: [10, 'Description must be at least 10 characters long'],
     maxlength: [2000, 'Description cannot exceed 2000 characters']
-  },
-  price: {
-    type: Number,
-    required: [true, 'Product price is required'],
-    min: [0, 'Price cannot be negative']
-  },
-  compareAtPrice: {
-    type: Number,
-    min: [0, 'Compare at price cannot be negative'],
-    validate: {
-      validator: function(this: IProduct, value: number) {
-        return !value || value >= this.price;
-      },
-      message: 'Compare at price must be greater than or equal to the selling price'
-    }
-  },
-  stock: {
-    type: Number,
-    required: [true, 'Stock quantity is required'],
-    min: [0, 'Stock cannot be negative'],
-    default: 0
   },
   images: [{
     type: String,
@@ -95,10 +143,25 @@ const productSchema = new Schema<IProduct>({
     type: Boolean,
     default: false
   },
-  weight: {
-    type: Number,
-    min: [0, 'Weight cannot be negative']
+  
+  // Variant structure (size + weight combinations)
+  variants: {
+    type: [sizeVariantSchema],
+    validate: {
+      validator: function(variants: ISizeVariant[]) {
+        return variants && variants.length > 0;
+      },
+      message: 'At least one size variant is required'
+    }
   },
+  
+  // Deprecated fields (kept for backward compatibility during migration)
+  categoryId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Category',
+    required: false // No longer required
+  },
+  
   ingredients: [{
     type: String,
     trim: true
@@ -122,15 +185,13 @@ const productSchema = new Schema<IProduct>({
 
 // Indexes for performance
 productSchema.index({ slug: 1 }, { unique: true });
-productSchema.index({ categoryId: 1 });
+productSchema.index({ categoryId: 1 }); // Keep for migration compatibility
 productSchema.index({ isActive: 1 });
 productSchema.index({ featured: 1 });
-productSchema.index({ price: 1 });
-productSchema.index({ stock: 1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' }); // Text search
-productSchema.index({ categoryId: 1, isActive: 1, featured: 1 });
-productSchema.index({ isActive: 1, stock: 1 });
+productSchema.index({ isActive: 1, featured: 1 });
+productSchema.index({ 'variants.weights.sku': 1 }, { sparse: true }); // For SKU lookups
 
 // Pre-save middleware to generate slug from name
 productSchema.pre('save', function(next) {
@@ -142,20 +203,85 @@ productSchema.pre('save', function(next) {
       .replace(/-+/g, '-') // Replace multiple hyphens with single
       .trim();
   }
+  
+  // Auto-generate SKUs for variants if not provided
+  if (this.variants && this.variants.length > 0) {
+    this.variants.forEach((variant, sizeIndex) => {
+      variant.weights.forEach((weight, weightIndex) => {
+        if (!weight.sku) {
+          // Generate SKU: PRODUCTSLUG-SIZE-WEIGHT
+          const sizeSlug = variant.size.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const weightSlug = weight.weight.toLowerCase().replace(/[^a-z0-9]/g, '');
+          weight.sku = `${this.slug}-${sizeSlug}-${weightSlug}`.toUpperCase();
+        }
+      });
+    });
+  }
+  
   next();
 });
 
-// Virtual for discount percentage
-productSchema.virtual('discountPercentage').get(function() {
-  if (this.compareAtPrice && this.compareAtPrice > this.price) {
-    return Math.round(((this.compareAtPrice - this.price) / this.compareAtPrice) * 100);
-  }
-  return 0;
+// Method to get total stock across all variants
+productSchema.methods.getTotalStock = function(): number {
+  if (!this.variants || this.variants.length === 0) return 0;
+  
+  return this.variants.reduce((total, variant) => {
+    return total + variant.weights.reduce((sum, weight) => {
+      return weight.isActive !== false ? sum + weight.stock : sum;
+    }, 0);
+  }, 0);
+};
+
+// Method to get minimum price across all active variants
+productSchema.methods.getMinPrice = function(): number {
+  if (!this.variants || this.variants.length === 0) return 0;
+  
+  const activePrices: number[] = [];
+  this.variants.forEach(variant => {
+    if (variant.isActive !== false) {
+      variant.weights.forEach(weight => {
+        if (weight.isActive !== false) {
+          activePrices.push(weight.price);
+        }
+      });
+    }
+  });
+  
+  return activePrices.length > 0 ? Math.min(...activePrices) : 0;
+};
+
+// Method to get maximum price across all active variants
+productSchema.methods.getMaxPrice = function(): number {
+  if (!this.variants || this.variants.length === 0) return 0;
+  
+  const activePrices: number[] = [];
+  this.variants.forEach(variant => {
+    if (variant.isActive !== false) {
+      variant.weights.forEach(weight => {
+        if (weight.isActive !== false) {
+          activePrices.push(weight.price);
+        }
+      });
+    }
+  });
+  
+  return activePrices.length > 0 ? Math.max(...activePrices) : 0;
+};
+
+// Virtual for checking if any variant has stock
+productSchema.virtual('inStock').get(function() {
+  return this.getTotalStock() > 0;
 });
 
-// Virtual for availability
-productSchema.virtual('inStock').get(function() {
-  return this.stock > 0;
+// Virtual for price range display
+productSchema.virtual('priceRange').get(function() {
+  const minPrice = this.getMinPrice();
+  const maxPrice = this.getMaxPrice();
+  
+  if (minPrice === maxPrice) {
+    return `₹${minPrice}`;
+  }
+  return `₹${minPrice} - ₹${maxPrice}`;
 });
 
 // Prevent re-compilation in development

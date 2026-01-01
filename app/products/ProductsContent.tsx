@@ -9,14 +9,29 @@ import { CartEvents } from '@/lib/auth/cartEvents';
 import LoginModal from '@/components/modals/LoginModal';
 import { toast } from 'react-toastify';
 
+interface WeightOption {
+  weight: string;
+  price: number;
+  stock: number;
+  sku?: string;
+  isActive: boolean;
+}
+
+interface SizeVariant {
+  size: string;
+  weights: WeightOption[];
+  isActive: boolean;
+}
+
 interface Product {
   _id: string;
   name: string;
   slug: string;
-  price: number;
+  price?: number;  // For old products
   images: string[];
   description: string;
-  stock: number;
+  stock?: number;  // For old products
+  variants?: SizeVariant[];  // For new variant products
   categoryId: {
     _id: string;
     name: string;
@@ -40,6 +55,56 @@ export default function ProductsContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Helper functions for variant products
+  const getMinPrice = (product: Product): number => {
+    if (product.variants && product.variants.length > 0) {
+      const prices: number[] = [];
+      product.variants.forEach(variant => {
+        if (variant.weights && variant.weights.length > 0) {
+          variant.weights.forEach(w => prices.push(w.price));
+        }
+      });
+      return prices.length > 0 ? Math.min(...prices) : 0;
+    }
+    return product.price || 0;
+  };
+
+  const getMaxPrice = (product: Product): number => {
+    if (product.variants && product.variants.length > 0) {
+      const prices: number[] = [];
+      product.variants.forEach(variant => {
+        if (variant.weights && variant.weights.length > 0) {
+          variant.weights.forEach(w => prices.push(w.price));
+        }
+      });
+      return prices.length > 0 ? Math.max(...prices) : 0;
+    }
+    return product.price || 0;
+  };
+
+  const getTotalStock = (product: Product): number => {
+    if (product.variants && product.variants.length > 0) {
+      let total = 0;
+      product.variants.forEach(variant => {
+        if (variant.weights && variant.weights.length > 0) {
+          variant.weights.forEach(w => total += w.stock || 0);
+        }
+      });
+      return total;
+    }
+    return product.stock || 0;
+  };
+
+  const getPriceDisplay = (product: Product): string => {
+    const minPrice = getMinPrice(product);
+    const maxPrice = getMaxPrice(product);
+    
+    if (minPrice === maxPrice || !product.variants) {
+      return formatPrice(minPrice);
+    }
+    return `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
+  };
 
   const searchParams = useSearchParams();
 
@@ -343,41 +408,73 @@ export default function ProductsContent() {
                         </div>
                       </Link>
 
-                      {/* Add to Cart Button - Appears on Hover */}
+                      {/* Action Button - Appears on Hover */}
                       <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 ease-in-out z-20">
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleAddToCart(product._id);
-                          }}
-                          disabled={product.stock <= 0}
-                          className={`w-full flex items-center justify-center gap-2 h-12 px-4 font-semibold transition-all duration-200 ${
-                            product.stock <= 0 
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                              : 'bg-teal-500 text-white cursor-pointer hover:bg-teal-600 transform hover:scale-105 active:scale-95 shadow-lg'
-                          }`}
-                        >
-                          {product.stock <= 0 ? (
-                            <>
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                              </svg>
-                              Out of Stock
-                            </>
-                          ) : (
-                            <>
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8m-8 0a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
-                              </svg>
-                              Add to Cart
-                            </>
-                          )}
-                        </button>
+                        {product.variants && product.variants.length > 0 ? (
+                          // For products with variants - Show Select Options button
+                          <Link 
+                            href={`/products/${product.slug}/select-variant`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            className={`w-full flex items-center justify-center gap-2 h-12 px-4 font-semibold transition-all duration-200 ${
+                              getTotalStock(product) <= 0 
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none' 
+                                : 'bg-teal-500 text-white cursor-pointer hover:bg-teal-600 transform hover:scale-105 active:scale-95 shadow-lg'
+                            }`}
+                          >
+                            {getTotalStock(product) <= 0 ? (
+                              <>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                                </svg>
+                                Out of Stock
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Select Options
+                              </>
+                            )}
+                          </Link>
+                        ) : (
+                          // For products without variants - Direct Add to Cart
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleAddToCart(product._id);
+                            }}
+                            disabled={getTotalStock(product) <= 0}
+                            className={`w-full flex items-center justify-center gap-2 h-12 px-4 font-semibold transition-all duration-200 ${
+                              getTotalStock(product) <= 0 
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-teal-500 text-white cursor-pointer hover:bg-teal-600 transform hover:scale-105 active:scale-95 shadow-lg'
+                            }`}
+                          >
+                            {getTotalStock(product) <= 0 ? (
+                              <>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                                </svg>
+                                Out of Stock
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8m-8 0a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
+                                </svg>
+                                Add to Cart
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
 
                       {/* Stock Status Overlay */}
-                      {product.stock <= 0 && (
+                      {getTotalStock(product) <= 0 && (
                         <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-30">
                           <span className="text-white font-bold text-lg">Out of Stock</span>
                         </div>
@@ -397,14 +494,14 @@ export default function ProductsContent() {
                       
                       <div className="flex items-center justify-between mb-4">
                         <p className="text-2xl font-bold text-gray-900">
-                          {formatPrice(product.price)}
+                          {getPriceDisplay(product)}
                         </p>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          product.stock > 0 
+                          getTotalStock(product) > 0 
                             ? 'bg-green-100 text-green-700 border border-green-200' 
                             : 'bg-red-100 text-red-700 border border-red-200'
                         }`}>
-                          {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                          {getTotalStock(product) > 0 ? `${getTotalStock(product)} in stock` : 'Out of stock'}
                         </span>
                       </div>
                     </div>

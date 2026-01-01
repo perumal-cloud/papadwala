@@ -7,6 +7,11 @@ export interface IOrderItem {
   price: number; // Price at the time of order
   quantity: number;
   image: string; // Main product image snapshot
+  
+  // Variant information
+  size: string; // Selected size variant
+  weight: string; // Selected weight option
+  sku?: string; // SKU for quick reference
 }
 
 export interface IShippingAddress {
@@ -97,6 +102,20 @@ const orderItemSchema = new Schema<IOrderItem>({
   image: {
     type: String,
     required: [true, 'Product image is required']
+  },
+  size: {
+    type: String,
+    required: [true, 'Size variant is required'],
+    trim: true
+  },
+  weight: {
+    type: String,
+    required: [true, 'Weight option is required'],
+    trim: true
+  },
+  sku: {
+    type: String,
+    trim: true
   }
 }, { _id: false });
 

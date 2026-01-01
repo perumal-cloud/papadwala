@@ -79,29 +79,81 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (product.stock < item.quantity) {
+      // Validate required variant fields
+      if (!item.size || !item.weight) {
         return NextResponse.json(
-          { error: `Insufficient stock for ${product.name}. Available: ${product.stock}` },
+          { error: `Size and weight are required for ${product.name}` },
           { status: 400 }
         );
       }
 
-      const itemTotal = (item.priceSnapshot || product.price) * item.quantity;
+      // Get price and stock based on variant or product level
+      let price = product.price || 0;
+      let availableStock = product.stock || 0;
+      let sku = '';
+
+      if (product.variants && product.variants.length > 0) {
+        // Product has variants
+        const selectedVariant = product.variants.find((v: any) => v.size === item.size);
+        if (!selectedVariant) {
+          return NextResponse.json(
+            { error: `Invalid size "${item.size}" for ${product.name}` },
+            { status: 400 }
+          );
+        }
+
+        const selectedWeight = selectedVariant.weights.find((w: any) => w.weight === item.weight);
+        if (!selectedWeight) {
+          return NextResponse.json(
+            { error: `Invalid weight "${item.weight}" for ${product.name}` },
+            { status: 400 }
+          );
+        }
+
+        price = selectedWeight.price;
+        availableStock = selectedWeight.stock;
+        sku = selectedWeight.sku || '';
+
+        // Check variant stock
+        if (availableStock < item.quantity) {
+          return NextResponse.json(
+            { error: `Insufficient stock for ${product.name} (${item.size}, ${item.weight}). Available: ${availableStock}` },
+            { status: 400 }
+          );
+        }
+
+        // Update variant stock
+        selectedWeight.stock -= item.quantity;
+        await product.save();
+      } else {
+        // Non-variant product
+        if (availableStock < item.quantity) {
+          return NextResponse.json(
+            { error: `Insufficient stock for ${product.name}. Available: ${availableStock}` },
+            { status: 400 }
+          );
+        }
+
+        // Update product stock
+        await Product.findByIdAndUpdate(
+          product._id,
+          { $inc: { stock: -item.quantity } }
+        );
+      }
+
+      const itemTotal = (item.priceSnapshot || price) * item.quantity;
       orderTotal += itemTotal;
 
       orderItems.push({
         productId: product._id,
         name: product.name,
-        price: item.priceSnapshot || product.price,
+        price: item.priceSnapshot || price,
         quantity: item.quantity,
-        image: product.images && product.images.length > 0 ? product.images[0] : '/placeholder-product.jpg'
+        image: product.images && product.images.length > 0 ? product.images[0] : '/placeholder-product.jpg',
+        size: item.size,
+        weight: item.weight,
+        sku: sku
       });
-
-      // Update product stock
-      await Product.findByIdAndUpdate(
-        product._id,
-        { $inc: { stock: -item.quantity } }
-      );
     }
 
     // Generate order number

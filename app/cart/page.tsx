@@ -19,6 +19,9 @@ interface CartItem {
   };
   quantity: number;
   priceSnapshot: number;
+  size: string;
+  weight: string;
+  sku?: string;
 }
 
 interface Cart {
@@ -65,7 +68,7 @@ export default function CartPage() {
     }
   };
 
-  const updateQuantity = async (productId: string, quantity: number) => {
+  const updateQuantity = async (productId: string, quantity: number, size?: string, weight?: string) => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
       router.push('/auth/login');
@@ -74,16 +77,21 @@ export default function CartPage() {
 
     setIsUpdating(true);
     try {
+      const requestBody: any = {
+        productId,
+        quantity
+      };
+
+      if (size) requestBody.size = size;
+      if (weight) requestBody.weight = weight;
+
       const response = await fetch('/api/cart', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          productId,
-          quantity
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (response.ok) {
@@ -109,7 +117,7 @@ export default function CartPage() {
     }
   };
 
-  const removeItem = async (productId: string) => {
+  const removeItem = async (productId: string, size?: string, weight?: string) => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
       router.push('/auth/login');
@@ -122,7 +130,11 @@ export default function CartPage() {
 
     setIsUpdating(true);
     try {
-      const response = await fetch(`/api/cart?productId=${productId}`, {
+      let url = `/api/cart?productId=${productId}`;
+      if (size) url += `&size=${encodeURIComponent(size)}`;
+      if (weight) url += `&weight=${encodeURIComponent(weight)}`;
+
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -235,6 +247,11 @@ export default function CartPage() {
                           {item.productId.name}
                         </h3>
                       </Link>
+                      {item.size && item.weight && (item.size !== 'Standard' || item.weight !== 'Standard') && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Size:</span> {item.size} | <span className="font-medium">Weight:</span> {item.weight}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-500 mt-1">
                         Price: ₹{item.priceSnapshot}
                       </p>
@@ -248,7 +265,7 @@ export default function CartPage() {
                     {/* Quantity Controls */}
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => updateQuantity(item.productId._id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.productId._id, item.quantity - 1, item.size, item.weight)}
                         disabled={isUpdating || item.quantity <= 1}
                         className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -258,7 +275,7 @@ export default function CartPage() {
                       </button>
                       <span className="w-8 text-center font-medium">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.productId._id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.productId._id, item.quantity + 1, item.size, item.weight)}
                         disabled={isUpdating || item.quantity >= item.productId.stock}
                         className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -275,7 +292,7 @@ export default function CartPage() {
 
                     {/* Remove Button */}
                     <button
-                      onClick={() => removeItem(item.productId._id)}
+                      onClick={() => removeItem(item.productId._id, item.size, item.weight)}
                       disabled={isUpdating}
                       className="text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >

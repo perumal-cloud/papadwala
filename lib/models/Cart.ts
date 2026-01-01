@@ -4,6 +4,11 @@ export interface ICartItem {
   productId: mongoose.Types.ObjectId;
   quantity: number;
   priceSnapshot: number; // Price at the time of adding to cart
+  
+  // Variant information
+  size: string; // Selected size variant
+  weight: string; // Selected weight option
+  sku?: string; // SKU for quick reference
 }
 
 export interface ICart extends Document {
@@ -29,6 +34,20 @@ const cartItemSchema = new Schema<ICartItem>({
     type: Number,
     required: [true, 'Price snapshot is required'],
     min: [0, 'Price cannot be negative']
+  },
+  size: {
+    type: String,
+    required: [true, 'Size variant is required'],
+    trim: true
+  },
+  weight: {
+    type: String,
+    required: [true, 'Weight option is required'],
+    trim: true
+  },
+  sku: {
+    type: String,
+    trim: true
   }
 }, { _id: false });
 
@@ -46,6 +65,7 @@ const cartSchema = new Schema<ICart>({
 // Indexes for performance
 cartSchema.index({ userId: 1 }, { unique: true });
 cartSchema.index({ 'items.productId': 1 });
+cartSchema.index({ 'items.sku': 1 });
 cartSchema.index({ updatedAt: -1 });
 
 // Virtual for total items count
@@ -58,32 +78,55 @@ cartSchema.virtual('totalAmount').get(function() {
   return this.items.reduce((total, item) => total + (item.quantity * item.priceSnapshot), 0);
 });
 
-// Method to add item to cart
-cartSchema.methods.addItem = function(productId: mongoose.Types.ObjectId, quantity: number, price: number) {
+// Method to add item to cart with variant information
+cartSchema.methods.addItem = function(
+  productId: mongoose.Types.ObjectId, 
+  quantity: number, 
+  price: number,
+  size: string,
+  weight: string,
+  sku?: string
+) {
+  // Find if item with same productId, size, and weight exists
   const existingItemIndex = this.items.findIndex(
-    (item: ICartItem) => item.productId.toString() === productId.toString()
+    (item: ICartItem) => 
+      item.productId.toString() === productId.toString() &&
+      item.size === size &&
+      item.weight === weight
   );
 
   if (existingItemIndex >= 0) {
     // Update existing item
     this.items[existingItemIndex].quantity += quantity;
     this.items[existingItemIndex].priceSnapshot = price; // Update with current price
+    if (sku) this.items[existingItemIndex].sku = sku;
   } else {
     // Add new item
     this.items.push({
       productId,
       quantity,
-      priceSnapshot: price
+      priceSnapshot: price,
+      size,
+      weight,
+      sku
     });
   }
   
   return this.save();
 };
 
-// Method to update item quantity
-cartSchema.methods.updateItemQuantity = function(productId: mongoose.Types.ObjectId, quantity: number) {
+// Method to update item quantity with variant information
+cartSchema.methods.updateItemQuantity = function(
+  productId: mongoose.Types.ObjectId, 
+  quantity: number,
+  size: string,
+  weight: string
+) {
   const itemIndex = this.items.findIndex(
-    (item: ICartItem) => item.productId.toString() === productId.toString()
+    (item: ICartItem) => 
+      item.productId.toString() === productId.toString() &&
+      item.size === size &&
+      item.weight === weight
   );
 
   if (itemIndex >= 0) {
@@ -97,10 +140,18 @@ cartSchema.methods.updateItemQuantity = function(productId: mongoose.Types.Objec
   return this.save();
 };
 
-// Method to remove item from cart
-cartSchema.methods.removeItem = function(productId: mongoose.Types.ObjectId) {
+// Method to remove item from cart with variant information
+cartSchema.methods.removeItem = function(
+  productId: mongoose.Types.ObjectId,
+  size: string,
+  weight: string
+) {
   this.items = this.items.filter(
-    (item: ICartItem) => item.productId.toString() !== productId.toString()
+    (item: ICartItem) => !(
+      item.productId.toString() === productId.toString() &&
+      item.size === size &&
+      item.weight === weight
+    )
   );
   
   return this.save();

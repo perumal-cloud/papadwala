@@ -31,6 +31,9 @@ interface CartItem {
   };
   quantity: number;
   priceSnapshot: number;
+  size: string;
+  weight: string;
+  sku?: string;
 }
 
 interface Cart {
@@ -139,7 +142,10 @@ export default function CheckoutPage() {
           items: cart.items.map(item => ({
             productId: item.productId._id,
             quantity: item.quantity,
-            priceSnapshot: item.priceSnapshot
+            priceSnapshot: item.priceSnapshot,
+            size: item.size,
+            weight: item.weight,
+            sku: item.sku
           })),
           shippingAddress: {
             fullName: data.fullName,

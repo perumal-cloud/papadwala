@@ -11,15 +11,30 @@ import ImageGallery from '@/components/gallery/ImageGallery';
 import { toast } from 'react-toastify';
 
 
+interface WeightOption {
+  weight: string;
+  price: number;
+  stock: number;
+  sku?: string;
+  isActive: boolean;
+}
+
+interface SizeVariant {
+  size: string;
+  weights: WeightOption[];
+  isActive: boolean;
+}
+
 interface Product {
   _id: string;
   name: string;
   slug: string;
-  price: number;
+  price?: number;  // For old products
   compareAtPrice?: number;
   images: string[];
   description: string;
-  stock: number;
+  stock?: number;  // For old products
+  variants?: SizeVariant[];  // For new variant products
   weight?: number;
   ingredients?: string[];
   nutritionInfo?: {

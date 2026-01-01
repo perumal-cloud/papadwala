@@ -346,6 +346,150 @@ export function validateProduct(data: any): {
   };
 }
 
+// Variant-based product validation (NEW)
+export function validateVariantProduct(data: any): {
+  isValid: boolean;
+  errors: string[];
+  data?: {
+    name: string;
+    slug: string;
+    description: string;
+    variants: Array<{
+      size: string;
+      weights: Array<{
+        weight: string;
+        price: number;
+        stock: number;
+        sku?: string;
+        isActive?: boolean;
+      }>;
+      isActive?: boolean;
+    }>;
+    ingredients?: string[];
+    nutritionInfo?: any;
+    tags?: string[];
+    isActive?: boolean;
+    featured?: boolean;
+  };
+} {
+  const errors: string[] = [];
+
+  // Name validation
+  if (!data.name || typeof data.name !== 'string') {
+    errors.push('Product name is required');
+  } else if (data.name.trim().length < 2) {
+    errors.push('Product name must be at least 2 characters long');
+  } else if (data.name.trim().length > 100) {
+    errors.push('Product name cannot exceed 100 characters');
+  }
+
+  // Slug validation
+  if (!data.slug || typeof data.slug !== 'string') {
+    errors.push('Product slug is required');
+  } else if (data.slug.trim().length < 2) {
+    errors.push('Product slug must be at least 2 characters long');
+  } else if (!/^[a-z0-9-]+$/.test(data.slug)) {
+    errors.push('Product slug must contain only lowercase letters, numbers, and hyphens');
+  }
+
+  // Description validation
+  if (!data.description || typeof data.description !== 'string') {
+    errors.push('Product description is required');
+  } else if (data.description.trim().length < 10) {
+    errors.push('Description must be at least 10 characters long');
+  } else if (data.description.trim().length > 2000) {
+    errors.push('Description cannot exceed 2000 characters');
+  }
+
+  // Variants validation
+  if (!data.variants || !Array.isArray(data.variants)) {
+    errors.push('Variants array is required');
+  } else if (data.variants.length === 0) {
+    errors.push('At least one size variant is required');
+  } else {
+    data.variants.forEach((variant: any, variantIndex: number) => {
+      // Size validation
+      if (!variant.size || typeof variant.size !== 'string') {
+        errors.push(`Variant ${variantIndex + 1}: Size is required`);
+      } else if (variant.size.trim().length === 0) {
+        errors.push(`Variant ${variantIndex + 1}: Size cannot be empty`);
+      }
+
+      // Weights validation
+      if (!variant.weights || !Array.isArray(variant.weights)) {
+        errors.push(`Variant ${variantIndex + 1}: Weights array is required`);
+      } else if (variant.weights.length === 0) {
+        errors.push(`Variant ${variantIndex + 1}: At least one weight option is required`);
+      } else {
+        variant.weights.forEach((weight: any, weightIndex: number) => {
+          // Weight value validation
+          if (!weight.weight || typeof weight.weight !== 'string') {
+            errors.push(`Variant ${variantIndex + 1}, Weight ${weightIndex + 1}: Weight value is required`);
+          }
+
+          // Price validation
+          if (weight.price === undefined || weight.price === null) {
+            errors.push(`Variant ${variantIndex + 1}, Weight ${weightIndex + 1}: Price is required`);
+          } else if (typeof weight.price !== 'number' || weight.price < 0) {
+            errors.push(`Variant ${variantIndex + 1}, Weight ${weightIndex + 1}: Price must be a positive number`);
+          }
+
+          // Stock validation
+          if (weight.stock === undefined || weight.stock === null) {
+            errors.push(`Variant ${variantIndex + 1}, Weight ${weightIndex + 1}: Stock is required`);
+          } else if (typeof weight.stock !== 'number' || weight.stock < 0 || !Number.isInteger(weight.stock)) {
+            errors.push(`Variant ${variantIndex + 1}, Weight ${weightIndex + 1}: Stock must be a non-negative integer`);
+          }
+        });
+      }
+    });
+  }
+
+  // Ingredients validation (optional)
+  if (data.ingredients !== undefined) {
+    if (!Array.isArray(data.ingredients)) {
+      errors.push('Ingredients must be an array');
+    } else if (data.ingredients.some((ingredient: any) => typeof ingredient !== 'string')) {
+      errors.push('All ingredients must be strings');
+    }
+  }
+
+  // Tags validation (optional)
+  if (data.tags !== undefined) {
+    if (!Array.isArray(data.tags)) {
+      errors.push('Tags must be an array');
+    } else if (data.tags.some((tag: any) => typeof tag !== 'string')) {
+      errors.push('All tags must be strings');
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    data: errors.length === 0 ? {
+      name: data.name.trim(),
+      slug: data.slug.trim(),
+      description: data.description.trim(),
+      variants: data.variants.map((variant: any) => ({
+        size: variant.size.trim(),
+        weights: variant.weights.map((weight: any) => ({
+          weight: weight.weight.trim(),
+          price: weight.price,
+          stock: weight.stock,
+          sku: weight.sku?.trim(),
+          isActive: weight.isActive !== undefined ? weight.isActive : true
+        })),
+        isActive: variant.isActive !== undefined ? variant.isActive : true
+      })),
+      ingredients: data.ingredients,
+      nutritionInfo: data.nutritionInfo,
+      tags: data.tags,
+      isActive: data.isActive !== undefined ? data.isActive : true,
+      featured: data.featured !== undefined ? data.featured : false
+    } : undefined
+  };
+}
+
 // Cart item validation
 export function validateCartItem(data: any): {
   isValid: boolean;
@@ -353,6 +497,8 @@ export function validateCartItem(data: any): {
   data?: {
     productId: string;
     quantity: number;
+    size?: string;
+    weight?: string;
   };
 } {
   const errors: string[] = [];
@@ -371,13 +517,28 @@ export function validateCartItem(data: any): {
     errors.push('Quantity must be an integer between 1 and 50');
   }
 
+  // Size validation (optional, for variant products)
+  if (data.size !== undefined && typeof data.size !== 'string') {
+    errors.push('Size must be a string');
+  }
+
+  // Weight validation (optional, for variant products)
+  if (data.weight !== undefined && typeof data.weight !== 'string') {
+    errors.push('Weight must be a string');
+  }
+
+  const result: any = {
+    productId: data.productId,
+    quantity: data.quantity
+  };
+
+  if (data.size) result.size = data.size.trim();
+  if (data.weight) result.weight = data.weight.trim();
+
   return {
     isValid: errors.length === 0,
     errors,
-    data: errors.length === 0 ? {
-      productId: data.productId,
-      quantity: data.quantity
-    } : undefined
+    data: errors.length === 0 ? result : undefined
   };
 }
 

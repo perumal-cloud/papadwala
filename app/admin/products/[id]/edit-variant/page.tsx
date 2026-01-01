@@ -45,10 +45,9 @@ export default function EditVariantProductPage() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [ingredient, setIngredient] = useState('');
   const [tag, setTag] = useState('');
 
@@ -118,7 +117,7 @@ export default function EditVariantProductPage() {
           featured: product.featured !== undefined ? product.featured : false,
         });
         
-        setUploadedImageUrls(product.images || []);
+        setExistingImages(product.images || []);
       } else {
         toast.error('Failed to load product');
         router.push('/admin/products');
@@ -240,68 +239,29 @@ export default function EditVariantProductPage() {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
-    if (files.length + selectedImages.length + uploadedImageUrls.length > 5) {
+    if (files.length + selectedImages.length + existingImages.length > 5) {
       toast.error('Maximum 5 images allowed');
       return;
     }
 
     setSelectedImages(prev => [...prev, ...files]);
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviewUrls((prev: string[]) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  const uploadImagesToCloudinary = async () => {
-    if (selectedImages.length === 0) {
-      toast.error('Please select files to upload');
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadProgress(0);
-    
-    try {
-      const uploadFormData = new FormData();
-      selectedImages.forEach((file) => {
-        uploadFormData.append('images', file);
-      });
-
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
-      }, 200);
-
-      const response = await ApiClient.post('/api/admin/products/upload-images', uploadFormData);
-      
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      
-      if (response.ok) {
-        const data = await response.json();
-        const uploadedUrls = data.imageUrls || [];
-        
-        setUploadedImageUrls(prev => [...prev, ...uploadedUrls]);
-        setSelectedImages([]);
-        
-        const fileInput = document.getElementById('imageFiles') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
-        
-        toast.success(`Successfully uploaded ${uploadedUrls.length} image(s) to Cloudinary`);
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to upload images');
-      }
-    } catch (error) {
-      console.error('Error uploading images:', error);
-      toast.error('Failed to upload images');
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
-    }
+  const removeNewImage = (index: number) => {
+    setSelectedImages((prev: File[]) => prev.filter((_, i) => i !== index));
+    setImagePreviewUrls((prev: string[]) => prev.filter((_, i) => i !== index));
   };
 
-  const removeImage = (index: number) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const removeUploadedImage = (index: number) => {
-    setUploadedImageUrls(prev => prev.filter((_, i) => i !== index));
+  const removeExistingImage = (index: number) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
   };
 
   // Ingredients and tags
@@ -380,7 +340,7 @@ export default function EditVariantProductPage() {
       }
     }
 
-    if (uploadedImageUrls.length === 0) {
+    if (existingImages.length === 0 && selectedImages.length === 0) {
       toast.error('At least one product image is required');
       return;
     }
@@ -388,9 +348,23 @@ export default function EditVariantProductPage() {
     setIsSaving(true);
 
     try {
+      // Prepare images array
+      const imagesArray = [...existingImages];
+      
+      // Convert new images to base64
+      for (const file of selectedImages) {
+        const base64 = await fileToBase64(file);
+        imagesArray.push(base64);
+      }
+
       const payload = {
         ...formData,
-        images: uploadedImageUrls
+        images: imagesArray.map(img => {
+          if (img.startsWith('data:')) {
+            return { base64: img };
+          }
+          return img;
+        })
       };
 
       const response = await ApiClient.put(`/api/products/variants/${productId}`, payload);
@@ -496,99 +470,22 @@ export default function EditVariantProductPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Product Images</h2>
           
-          {/* Upload Section */}
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-sm text-gray-600">
-                  Select images and upload to Cloudinary (Max 5 total)
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Uploaded: {uploadedImageUrls.length} | Selected: {selectedImages.length}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <input
-                type="file"
-                id="imageFiles"
-                accept="image/*"
-                multiple
-                onChange={handleImageSelect}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                disabled={uploadedImageUrls.length + selectedImages.length >= 5}
-              />
-              <button
-                type="button"
-                onClick={uploadImagesToCloudinary}
-                disabled={selectedImages.length === 0 || isUploading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center gap-2"
-              >
-                {isUploading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {uploadProgress}%
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    Upload to Cloudinary
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Selected Images (Not uploaded yet) */}
-          {selectedImages.length > 0 && (
-            <div className="space-y-2 mb-6">
-              <h3 className="text-sm font-medium text-gray-700">Selected (Not uploaded yet)</h3>
+          {/* Existing Images */}
+          {existingImages.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Current Images</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {selectedImages.map((file, index) => (
-                  <div key={index} className="relative group border-2 border-yellow-400 rounded-lg p-2">
-                    <div className="w-full h-24 bg-gray-100 rounded flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1 truncate">{file.name}</p>
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Uploaded Images */}
-          {uploadedImageUrls.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-green-700">✓ Uploaded to Cloudinary</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {uploadedImageUrls.map((url, index) => (
-                  <div key={index} className="relative group border-2 border-green-500 rounded-lg overflow-hidden">
+                {existingImages.map((url, index) => (
+                  <div key={index} className="relative group">
                     <img
                       src={url}
-                      alt={`Uploaded ${index + 1}`}
-                      className="w-full h-32 object-cover"
+                      alt={`Product ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border border-gray-300"
                     />
                     <button
                       type="button"
-                      onClick={() => removeUploadedImage(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition"
+                      onClick={() => removeExistingImage(index)}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -599,6 +496,44 @@ export default function EditVariantProductPage() {
               </div>
             </div>
           )}
+
+          {/* New Images */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Add New Images (Max 5 total)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageSelect}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              disabled={existingImages.length + selectedImages.length >= 5}
+            />
+            
+            {imagePreviewUrls.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                {imagePreviewUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`New ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border border-gray-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeNewImage(index)}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Variants Section */}

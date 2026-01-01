@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const cart = await Cart.findOne({ userId: decoded.userId })
       .populate({
         path: 'items.productId',
-        select: 'name slug price images stock isActive',
+        select: 'name slug price images stock isActive variants',
         populate: {
           path: 'categoryId',
           select: 'name slug'
@@ -68,10 +68,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Filter out inactive products and products that are out of stock
+    // Filter out inactive products and check stock based on variant or product level
     const validItems = cart.items.filter((item: any) => {
       const product = item.productId as any;
-      return product && product.isActive && product.stock > 0;
+      if (!product || !product.isActive) {
+        return false;
+      }
+
+      // For variant products, check variant stock
+      if (product.variants && product.variants.length > 0) {
+        const variant = product.variants.find((v: any) => v.size === item.size);
+        if (!variant) return false;
+        
+        const weightOption = variant.weights.find((w: any) => w.weight === item.weight);
+        if (!weightOption || weightOption.stock <= 0) return false;
+      } else {
+        // For non-variant products, check product stock
+        if (!product.stock || product.stock <= 0) return false;
+      }
+
+      return true;
     });
 
     // Update cart if items were filtered out
@@ -147,7 +163,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { productId, quantity } = validation.data!;
+    const { productId, quantity, size, weight } = validation.data!;
 
     // Check if product exists and is available
     const product = await Product.findById(productId);
@@ -165,11 +181,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (product.stock < quantity) {
+    // Handle variant products
+    let price = product.price || 0;
+    let availableStock = product.stock || 0;
+    let selectedSku = '';
+
+    if (product.variants && product.variants.length > 0) {
+      // Product has variants - size and weight are required
+      if (!size || !weight) {
+        return NextResponse.json(
+          { error: 'Size and weight are required for this product' },
+          { status: 400 }
+        );
+      }
+
+      // Find the selected variant
+      const selectedVariant = product.variants.find((v: any) => v.size === size);
+      if (!selectedVariant) {
+        return NextResponse.json(
+          { error: 'Invalid size selected' },
+          { status: 400 }
+        );
+      }
+
+      // Find the selected weight option
+      const selectedWeight = selectedVariant.weights.find((w: any) => w.weight === weight);
+      if (!selectedWeight) {
+        return NextResponse.json(
+          { error: 'Invalid weight selected' },
+          { status: 400 }
+        );
+      }
+
+      price = selectedWeight.price;
+      availableStock = selectedWeight.stock;
+      selectedSku = selectedWeight.sku || '';
+    }
+
+    // Check stock availability
+    if (availableStock < quantity) {
       return NextResponse.json(
         { 
           error: 'Insufficient stock',
-          availableStock: product.stock 
+          availableStock 
         },
         { status: 400 }
       );
@@ -181,20 +235,27 @@ export async function POST(request: NextRequest) {
       cart = new Cart({ userId: decoded.userId, items: [] });
     }
 
-    // Check if item already exists in cart
-    const existingItemIndex = cart.items.findIndex(
-      (item: any) => item.productId.toString() === productId
-    );
+    // For variant products, check if the same variant exists
+    // For non-variant products, check if the product exists
+    const existingItemIndex = cart.items.findIndex((item: any) => {
+      if (product.variants && product.variants.length > 0) {
+        return item.productId.toString() === productId && 
+               item.size === size && 
+               item.weight === weight;
+      } else {
+        return item.productId.toString() === productId;
+      }
+    });
 
     if (existingItemIndex >= 0) {
       // Update existing item
       const newQuantity = cart.items[existingItemIndex].quantity + quantity;
       
-      if (newQuantity > product.stock) {
+      if (newQuantity > availableStock) {
         return NextResponse.json(
           { 
             error: 'Cannot add more items. Insufficient stock.',
-            availableStock: product.stock,
+            availableStock,
             currentInCart: cart.items[existingItemIndex].quantity
           },
           { status: 400 }
@@ -209,14 +270,27 @@ export async function POST(request: NextRequest) {
       }
 
       cart.items[existingItemIndex].quantity = newQuantity;
-      cart.items[existingItemIndex].priceSnapshot = product.price; // Update with current price
+      cart.items[existingItemIndex].priceSnapshot = price;
     } else {
       // Add new item
-      cart.items.push({
+      const newItem: any = {
         productId: product._id,
         quantity,
-        priceSnapshot: product.price
-      });
+        priceSnapshot: price
+      };
+
+      // Add variant fields if product has variants
+      if (product.variants && product.variants.length > 0) {
+        newItem.size = size;
+        newItem.weight = weight;
+        if (selectedSku) newItem.sku = selectedSku;
+      } else {
+        // For non-variant products, use default values
+        newItem.size = 'Standard';
+        newItem.weight = 'Standard';
+      }
+
+      cart.items.push(newItem);
     }
 
     await cart.save();
@@ -310,7 +384,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { productId, quantity } = validation.data!;
+    const { productId, quantity, size, weight } = validation.data!;
 
     // Find user's cart
     const cart = await Cart.findOne({ userId: decoded.userId });
@@ -321,10 +395,16 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Find item in cart
-    const itemIndex = cart.items.findIndex(
-      (item: any) => item.productId.toString() === productId
-    );
+    // Find item in cart (considering variants)
+    const itemIndex = cart.items.findIndex((item: any) => {
+      if (size && weight) {
+        return item.productId.toString() === productId && 
+               item.size === size && 
+               item.weight === weight;
+      } else {
+        return item.productId.toString() === productId;
+      }
+    });
 
     if (itemIndex === -1) {
       return NextResponse.json(
@@ -346,11 +426,36 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (product.stock < quantity) {
+    // Get price and stock based on variant or product level
+    let price = product.price || 0;
+    let availableStock = product.stock || 0;
+
+    if (product.variants && product.variants.length > 0 && size && weight) {
+      const selectedVariant = product.variants.find((v: any) => v.size === size);
+      if (!selectedVariant) {
+        return NextResponse.json(
+          { error: 'Invalid size selected' },
+          { status: 400 }
+        );
+      }
+
+      const selectedWeight = selectedVariant.weights.find((w: any) => w.weight === weight);
+      if (!selectedWeight) {
+        return NextResponse.json(
+          { error: 'Invalid weight selected' },
+          { status: 400 }
+        );
+      }
+
+      price = selectedWeight.price;
+      availableStock = selectedWeight.stock;
+    }
+
+    if (availableStock < quantity) {
       return NextResponse.json(
         { 
           error: 'Insufficient stock',
-          availableStock: product.stock 
+          availableStock 
         },
         { status: 400 }
       );
@@ -358,7 +463,7 @@ export async function PUT(request: NextRequest) {
 
     // Update item quantity
     cart.items[itemIndex].quantity = quantity;
-    cart.items[itemIndex].priceSnapshot = product.price; // Update with current price
+    cart.items[itemIndex].priceSnapshot = price; // Update with current price
 
     await cart.save();
 
@@ -439,6 +544,8 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
+    const size = searchParams.get('size');
+    const weight = searchParams.get('weight');
 
     // Find user's cart
     const cart = await Cart.findOne({ userId: decoded.userId });
@@ -458,9 +565,15 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
-      const itemIndex = cart.items.findIndex(
-        (item: any) => item.productId.toString() === productId
-      );
+      const itemIndex = cart.items.findIndex((item: any) => {
+        if (size && weight) {
+          return item.productId.toString() === productId && 
+                 item.size === size && 
+                 item.weight === weight;
+        } else {
+          return item.productId.toString() === productId;
+        }
+      });
 
       if (itemIndex === -1) {
         return NextResponse.json(

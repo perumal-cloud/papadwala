@@ -6,24 +6,80 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ApiClient } from '@/lib/auth/ApiClient';
 
+interface WeightOption {
+  weight: string;
+  price: number;
+  stock: number;
+  sku?: string;
+  isActive?: boolean;
+}
+
+interface SizeVariant {
+  size: string;
+  weights: WeightOption[];
+  isActive?: boolean;
+}
+
 interface Product {
   _id: string;
   name: string;
   slug: string;
   description: string;
-  price: number;
-  compareAtPrice?: number;
-  stock: number;
+  price?: number; // Old format
+  compareAtPrice?: number; // Old format
+  stock?: number; // Old format
+  variants?: SizeVariant[]; // New format
   images: string[];
   isActive: boolean;
   featured: boolean;
-  categoryId: {
+  categoryId?: {
     _id: string;
     name: string;
   };
   createdAt: string;
   updatedAt: string;
 }
+
+// Helper functions for variant-based products
+const getMinPrice = (variants?: SizeVariant[]): number => {
+  if (!variants || variants.length === 0) return 0;
+  const prices: number[] = [];
+  variants.forEach(variant => {
+    if (variant.isActive !== false && variant.weights && Array.isArray(variant.weights)) {
+      variant.weights.forEach(weight => {
+        if (weight.isActive !== false) {
+          prices.push(weight.price);
+        }
+      });
+    }
+  });
+  return prices.length > 0 ? Math.min(...prices) : 0;
+};
+
+const getMaxPrice = (variants?: SizeVariant[]): number => {
+  if (!variants || variants.length === 0) return 0;
+  const prices: number[] = [];
+  variants.forEach(variant => {
+    if (variant.isActive !== false && variant.weights && Array.isArray(variant.weights)) {
+      variant.weights.forEach(weight => {
+        if (weight.isActive !== false) {
+          prices.push(weight.price);
+        }
+      });
+    }
+  });
+  return prices.length > 0 ? Math.max(...prices) : 0;
+};
+
+const getTotalStock = (variants?: SizeVariant[]): number => {
+  if (!variants || variants.length === 0) return 0;
+  return variants.reduce((total, variant) => {
+    if (!variant.weights || !Array.isArray(variant.weights)) return total;
+    return total + variant.weights.reduce((sum, weight) => {
+      return weight.isActive !== false ? sum + weight.stock : sum;
+    }, 0);
+  }, 0);
+};
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -87,12 +143,14 @@ export default function AdminProductsPage() {
           bValue = b.name.toLowerCase();
           break;
         case 'price':
-          aValue = a.price;
-          bValue = b.price;
+          // Handle both old and new product formats
+          aValue = a.price || getMinPrice(a.variants);
+          bValue = b.price || getMinPrice(b.variants);
           break;
         case 'stock':
-          aValue = a.stock;
-          bValue = b.stock;
+          // Handle both old and new product formats
+          aValue = a.stock || getTotalStock(a.variants);
+          bValue = b.stock || getTotalStock(b.variants);
           break;
         case 'createdAt':
           aValue = new Date(a.createdAt).getTime();
@@ -361,21 +419,47 @@ export default function AdminProductsPage() {
                       {product.categoryId?.name || 'Uncategorized'}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">₹{product.price.toLocaleString('en-IN')}</div>
-                      {product.compareAtPrice && (
-                        <div className="text-xs text-gray-500 line-through">₹{product.compareAtPrice.toLocaleString('en-IN')}</div>
+                      {product.variants ? (
+                        // New variant-based product
+                        <div>
+                          {(() => {
+                            const minPrice = getMinPrice(product.variants);
+                            const maxPrice = getMaxPrice(product.variants);
+                            return minPrice === maxPrice ? (
+                              <div className="text-sm text-gray-900">₹{minPrice.toLocaleString('en-IN')}</div>
+                            ) : (
+                              <div className="text-sm text-gray-900">
+                                ₹{minPrice.toLocaleString('en-IN')} - ₹{maxPrice.toLocaleString('en-IN')}
+                              </div>
+                            );
+                          })()}
+                          <div className="text-xs text-gray-500">{product.variants.length} variant{product.variants.length > 1 ? 's' : ''}</div>
+                        </div>
+                      ) : (
+                        // Old single-price product
+                        <div>
+                          <div className="text-sm text-gray-900">₹{(product.price || 0).toLocaleString('en-IN')}</div>
+                          {product.compareAtPrice && (
+                            <div className="text-xs text-gray-500 line-through">₹{product.compareAtPrice.toLocaleString('en-IN')}</div>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4 w-32">
-                      <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full whitespace-nowrap ${
-                        product.stock <= 5
-                          ? 'bg-red-100 text-red-800'
-                          : product.stock <= 20
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                        {product.stock} units
-                      </span>
+                      {(() => {
+                        const stock = product.variants ? getTotalStock(product.variants) : (product.stock || 0);
+                        return (
+                          <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full whitespace-nowrap ${
+                            stock <= 5
+                              ? 'bg-red-100 text-red-800'
+                              : stock <= 20
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {stock} units
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4">
                       <button

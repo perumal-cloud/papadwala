@@ -67,8 +67,6 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const errorMessage = result.error || 'Login failed';
-        setError(errorMessage);
-        toast.error(errorMessage);
         throw new Error(errorMessage);
       }
 
@@ -84,10 +82,7 @@ export default function LoginPage() {
 
     } catch (err: any) {
       const errorMessage = err.message || 'An unexpected error occurred';
-      setError(errorMessage);
-      if (!err.message?.includes('Login failed')) {
-        toast.error(errorMessage);
-      }
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -115,8 +110,6 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const errorMessage = result.error || 'Google Sign-In failed';
-        setError(errorMessage);
-        toast.error(errorMessage);
         throw new Error(errorMessage);
       }
 
@@ -131,10 +124,7 @@ export default function LoginPage() {
 
     } catch (err: any) {
       const errorMessage = err.message || 'An unexpected error occurred';
-      setError(errorMessage);
-      if (!err.message?.includes('failed')) {
-        toast.error(errorMessage);
-      }
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -159,13 +149,6 @@ export default function LoginPage() {
         {/* Login Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                {error}
-              </div>
-            )}
-
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">

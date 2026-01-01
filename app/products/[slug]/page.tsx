@@ -8,14 +8,29 @@ import Link from 'next/link';
 import LoginModal from '@/components/modals/LoginModal';
 import { toast } from 'react-toastify';
 
+interface WeightOption {
+  weight: string;
+  price: number;
+  stock: number;
+  sku?: string;
+  isActive: boolean;
+}
+
+interface SizeVariant {
+  size: string;
+  weights: WeightOption[];
+  isActive: boolean;
+}
+
 interface Product {
   _id: string;
   name: string;
   slug: string;
   description: string;
-  price: number;
+  price?: number;  // For old products
   images: string[];
-  stock: number;
+  stock?: number;  // For old products
+  variants?: SizeVariant[];  // For new variant products
   categoryId: {
     _id: string;
     name: string;
@@ -38,6 +53,12 @@ export default function ProductDetailPage() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   
+  // Variant selection for new variant products
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedWeight, setSelectedWeight] = useState('');
+  const [selectedVariantPrice, setSelectedVariantPrice] = useState(0);
+  const [selectedVariantStock, setSelectedVariantStock] = useState(0);
+  
   const params = useParams();
   const router = useRouter();
   const slug = params?.slug as string;
@@ -47,6 +68,20 @@ export default function ProductDetailPage() {
       fetchProduct();
     }
   }, [slug]);
+
+  // Initialize first variant selection for variant products
+  useEffect(() => {
+    if (product?.variants && product.variants.length > 0) {
+      const firstVariant = product.variants[0];
+      if (firstVariant.weights && firstVariant.weights.length > 0) {
+        const firstWeight = firstVariant.weights[0];
+        setSelectedSize(firstVariant.size);
+        setSelectedWeight(firstWeight.weight);
+        setSelectedVariantPrice(firstWeight.price);
+        setSelectedVariantStock(firstWeight.stock);
+      }
+    }
+  }, [product]);
 
   const fetchProduct = async () => {
     try {
@@ -81,18 +116,52 @@ export default function ProductDetailPage() {
 
     if (!product) return;
 
+    // Check if product has variants
+    if (product.variants && product.variants.length > 0) {
+      if (!selectedSize || !selectedWeight) {
+        toast.error('Please select size and weight');
+        return;
+      }
+      if (selectedVariantStock === 0) {
+        toast.error('This variant is out of stock');
+        return;
+      }
+      if (quantity > selectedVariantStock) {
+        toast.error('Selected quantity exceeds available stock');
+        return;
+      }
+    } else {
+      // Old product without variants
+      if ((product.stock || 0) === 0) {
+        toast.error('This product is out of stock');
+        return;
+      }
+      if (quantity > (product.stock || 0)) {
+        toast.error('Selected quantity exceeds available stock');
+        return;
+      }
+    }
+
     setIsAddingToCart(true);
     try {
+      const requestBody: any = {
+        productId: product._id,
+        quantity
+      };
+
+      // Add variant info if product has variants
+      if (product.variants && product.variants.length > 0) {
+        requestBody.size = selectedSize;
+        requestBody.weight = selectedWeight;
+      }
+
       const response = await fetch('/api/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          productId: product._id,
-          quantity
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (response.ok) {
@@ -254,20 +323,87 @@ export default function ProductDetailPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
                 {product.name}
               </h1>
-              <div className="text-3xl font-bold text-teal-600 mb-4">
-                ₹{product.price}
-              </div>
               
-              <div className="flex items-center space-x-4 mb-6">
-                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  product.stock > 0 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+              {/* Price Display - Different for variant vs non-variant products */}
+              {product.variants && product.variants.length > 0 ? (
+                <div className="text-3xl font-bold text-teal-600 mb-4">
+                  ₹{selectedVariantPrice > 0 ? selectedVariantPrice : '...'}
                 </div>
+              ) : (
+                <div className="text-3xl font-bold text-teal-600 mb-4">
+                  ₹{product.price}
+                </div>
+              )}
+              
+              {/* Stock Display */}
+              <div className="flex items-center space-x-4 mb-6">
+                {product.variants && product.variants.length > 0 ? (
+                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    selectedVariantStock > 0 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {selectedVariantStock > 0 ? `${selectedVariantStock} in stock` : 'Out of stock'}
+                  </div>
+                ) : (
+                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    (product.stock || 0) > 0 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {(product.stock || 0) > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Variant Selector for new variant products */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                <h3 className="text-lg font-semibold mb-4">Select Size & Weight</h3>
+                
+                {product.variants.map((variant, vIndex) => (
+                  <div key={vIndex} className="mb-6">
+                    <div className="font-medium text-gray-700 mb-3">
+                      Size: {variant.size}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {variant.weights.map((weightOption, wIndex) => (
+                        <button
+                          key={wIndex}
+                          onClick={() => {
+                            setSelectedSize(variant.size);
+                            setSelectedWeight(weightOption.weight);
+                            setSelectedVariantPrice(weightOption.price);
+                            setSelectedVariantStock(weightOption.stock);
+                            if (quantity > weightOption.stock) {
+                              setQuantity(Math.min(1, weightOption.stock));
+                            }
+                          }}
+                          disabled={weightOption.stock === 0}
+                          className={`p-4 border-2 rounded-lg text-left transition-all ${
+                            selectedSize === variant.size && selectedWeight === weightOption.weight
+                              ? 'border-teal-600 bg-teal-50'
+                              : weightOption.stock === 0
+                              ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
+                              : 'border-gray-200 hover:border-teal-400 bg-white'
+                          }`}
+                        >
+                          <div className="font-semibold">{weightOption.weight}</div>
+                          <div className="text-teal-600 font-bold">₹{weightOption.price}</div>
+                          {weightOption.stock === 0 && (
+                            <div className="text-xs text-red-600 mt-1">Out of stock</div>
+                          )}
+                          {weightOption.stock > 0 && weightOption.stock < 10 && (
+                            <div className="text-xs text-orange-600 mt-1">Only {weightOption.stock} left</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div>
               <h3 className="text-lg font-semibold mb-2">Description</h3>
@@ -331,21 +467,39 @@ export default function ProductDetailPage() {
                   onChange={(e) => setQuantity(parseInt(e.target.value))}
                   className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
-                  {[...Array(Math.min(product.stock, 10))].map((_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {i + 1}
-                    </option>
-                  ))}
+                  {(() => {
+                    const maxStock = product.variants && product.variants.length > 0 
+                      ? selectedVariantStock 
+                      : (product.stock || 0);
+                    return [...Array(Math.min(maxStock, 10))].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ));
+                  })()}
                 </select>
               </div>
 
               <div className="flex space-x-4">
                 <button
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0 || isAddingToCart}
+                  disabled={
+                    (product.variants && product.variants.length > 0 
+                      ? selectedVariantStock === 0 
+                      : (product.stock || 0) === 0
+                    ) || isAddingToCart
+                  }
                   className="flex-1 bg-teal-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isAddingToCart ? 'Adding...' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                  {isAddingToCart 
+                    ? 'Adding...' 
+                    : (product.variants && product.variants.length > 0 
+                        ? selectedVariantStock === 0 
+                        : (product.stock || 0) === 0
+                      )
+                      ? 'Out of Stock' 
+                      : 'Add to Cart'
+                  }
                 </button>
                 
                 <button className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
