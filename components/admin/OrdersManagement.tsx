@@ -12,6 +12,9 @@ interface OrderItem {
   price: number;
   quantity: number;
   image: string;
+  size: string;
+  weight: string;
+  sku?: string;
 }
 
 interface ShippingAddress {

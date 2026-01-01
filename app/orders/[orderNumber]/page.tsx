@@ -16,6 +16,9 @@ interface OrderItem {
   price?: number; // Snapshot field
   quantity: number;
   priceSnapshot?: number; // Legacy field
+  size: string;
+  weight: string;
+  sku?: string;
 }
 
 interface Order {
@@ -299,8 +302,11 @@ export default function OrderDetailPage() {
                       >
                         {item.name || item.productId?.name || 'Product Not Available'}
                       </Link>
-                      <p className="text-gray-500">Quantity: {item.quantity}</p>
-                      <p className="text-gray-500">Price: ₹{item.price || item.priceSnapshot} each</p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-gray-900 font-semibold">Size: {item.size} | Weight: {item.weight}</p>
+                        <p className="text-gray-500">Quantity: {item.quantity}</p>
+                        <p className="text-gray-500">Price: ₹{item.price || item.priceSnapshot} each</p>
+                      </div>
                     </div>
                     <div className="text-lg font-semibold text-gray-900">
                       ₹{((item.price || item.priceSnapshot) || 0) * item.quantity}

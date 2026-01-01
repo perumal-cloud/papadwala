@@ -39,6 +39,9 @@ interface OrderItem {
   price: number;
   quantity: number;
   image: string;
+  size: string;
+  weight: string;
+  sku?: string;
 }
 
 interface ShippingAddress {
@@ -366,34 +369,34 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Orders Table - Desktop View */}
+      <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Order
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Items
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Payment
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -402,7 +405,7 @@ export default function AdminOrders() {
               {currentOrders.length > 0 ? (
                 currentOrders.map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         #{order.orderNumber}
                       </div>
@@ -412,7 +415,7 @@ export default function AdminOrders() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {order.userDetails?.name || order.shippingAddress.fullName}
                       </div>
@@ -420,31 +423,41 @@ export default function AdminOrders() {
                         {order.userDetails?.email || order.shippingAddress.email}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4">
                       <div className="text-sm text-gray-900">
                         {order.items.length} item(s)
                       </div>
+                      <div className="text-xs text-gray-500 mt-1 space-y-1">
+                        {order.items.slice(0, 2).map((item, idx) => (
+                          <div key={idx}>
+                            {item.name} - {item.size} ({item.weight}) x{item.quantity}
+                          </div>
+                        ))}
+                        {order.items.length > 2 && (
+                          <div className="text-gray-400">+{order.items.length - 2} more...</div>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {formatCurrency(order.total)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${ORDER_STATUS_COLORS[order.status] || 'bg-gray-100 text-gray-800'}`}>
                         {ORDER_STATUS_LABELS[order.status] || order.status.replace('-', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
                         {order.paymentStatus}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(order.createdAt)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex flex-col space-y-2">
                         <Link
                           href={`/orders/${order.orderNumber}`}
                           className="text-blue-600 hover:text-blue-900"
@@ -454,7 +467,7 @@ export default function AdminOrders() {
                         <select
                           value={order.status}
                           onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                          className="text-sm border border-gray-300 rounded px-2 py-1"
+                          className="text-xs border border-gray-300 rounded px-2 py-1"
                         >
                           <option value={ORDER_STATUSES.PENDING}>Pending</option>
                           <option value={ORDER_STATUSES.CONFIRMED}>Confirmed</option>
@@ -467,7 +480,7 @@ export default function AdminOrders() {
                         <select
                           value={order.paymentStatus}
                           onChange={(e) => handlePaymentStatusChange(order._id, e.target.value as 'pending' | 'paid' | 'failed')}
-                          className={`text-sm border border-gray-300 rounded px-2 py-1 ${getPaymentStatusColor(order.paymentStatus)}`}
+                          className={`text-xs border border-gray-300 rounded px-2 py-1 ${getPaymentStatusColor(order.paymentStatus)}`}
                           title="Payment Status"
                         >
                           <option value="pending">Pending</option>
@@ -488,6 +501,112 @@ export default function AdminOrders() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Orders Cards - Mobile/Tablet View */}
+      <div className="lg:hidden space-y-4">
+        {currentOrders.length > 0 ? (
+          currentOrders.map((order) => (
+            <div key={order._id} className="bg-white rounded-lg shadow p-4">
+              {/* Order Header */}
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <div className="text-sm font-bold text-gray-900">#{order.orderNumber}</div>
+                  <div className="text-xs text-gray-500 mt-1">{formatDate(order.createdAt)}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-teal-600">{formatCurrency(order.total)}</div>
+                  <Link
+                    href={`/orders/${order.orderNumber}`}
+                    className="text-xs text-blue-600 hover:text-blue-900"
+                  >
+                    View Details →
+                  </Link>
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="text-sm font-medium text-gray-900">
+                  {order.userDetails?.name || order.shippingAddress.fullName}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {order.userDetails?.email || order.shippingAddress.email}
+                </div>
+              </div>
+
+              {/* Items Info */}
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="text-xs font-medium text-gray-600 mb-2">
+                  {order.items.length} item(s):
+                </div>
+                <div className="space-y-1">
+                  {order.items.slice(0, 2).map((item, idx) => (
+                    <div key={idx} className="text-xs text-gray-700">
+                      • {item.name} - {item.size} ({item.weight}) x{item.quantity}
+                    </div>
+                  ))}
+                  {order.items.length > 2 && (
+                    <div className="text-xs text-gray-400">+{order.items.length - 2} more items...</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Badges */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${ORDER_STATUS_COLORS[order.status] || 'bg-gray-100 text-gray-800'}`}>
+                  {ORDER_STATUS_LABELS[order.status] || order.status.replace('-', ' ')}
+                </span>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
+                  {order.paymentStatus}
+                </span>
+              </div>
+
+              {/* Tracking Number */}
+              {order.trackingInfo?.trackingNumber && (
+                <div className="text-xs text-gray-600 mb-3">
+                  📦 Tracking: {order.trackingInfo.trackingNumber}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Order Status</label>
+                  <select
+                    value={order.status}
+                    onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                    className="w-full text-xs border border-gray-300 rounded px-2 py-1.5"
+                  >
+                    <option value={ORDER_STATUSES.PENDING}>Pending</option>
+                    <option value={ORDER_STATUSES.CONFIRMED}>Confirmed</option>
+                    <option value={ORDER_STATUSES.PROCESSING}>Processing</option>
+                    <option value={ORDER_STATUSES.SHIPPED}>Shipped</option>
+                    <option value={ORDER_STATUSES.OUT_FOR_DELIVERY}>Out for Delivery</option>
+                    <option value={ORDER_STATUSES.DELIVERED}>Delivered</option>
+                    <option value={ORDER_STATUSES.CANCELLED}>Cancelled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Payment Status</label>
+                  <select
+                    value={order.paymentStatus}
+                    onChange={(e) => handlePaymentStatusChange(order._id, e.target.value as 'pending' | 'paid' | 'failed')}
+                    className={`w-full text-xs border border-gray-300 rounded px-2 py-1.5 ${getPaymentStatusColor(order.paymentStatus)}`}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="failed">Failed</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+            No orders found
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
