@@ -345,7 +345,7 @@ export default function Header() {
             >
               Products
             </Link>
-            <Link 
+            {/* <Link 
               href="/categories" 
               className={`transition-colors font-medium ${
                 pathname?.startsWith('/categories') 
@@ -354,7 +354,7 @@ export default function Header() {
               }`}
             >
               Categories
-            </Link>
+            </Link> */}
             <Link 
               href="/contact" 
               className={`transition-colors font-medium ${
@@ -520,7 +520,7 @@ export default function Header() {
               >
                 Products
               </Link>
-              <Link 
+              {/* <Link 
                 href="/categories" 
                 className={`transition-colors px-3 py-2 rounded-lg font-medium ${
                   pathname?.startsWith('/categories') 
@@ -529,7 +529,7 @@ export default function Header() {
                 }`}
               >
                 Categories
-              </Link>
+              </Link> */}
               <Link 
                 href="/about" 
                 className={`transition-colors px-3 py-2 rounded-lg font-medium ${

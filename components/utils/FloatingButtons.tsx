@@ -34,7 +34,7 @@ export default function FloatingButtons() {
       {/* WhatsApp Button - Left Side */}
       <button
         onClick={openWhatsApp}
-        className="fixed left-6 bottom-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 animate-pulse"
+        className="fixed left-6 bottom-6 z-50 bg-teal-700 hover:bg-teal-600 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 animate-pulse"
         aria-label="Contact us on WhatsApp"
       >
         <FaWhatsapp className="w-6 h-6" />
