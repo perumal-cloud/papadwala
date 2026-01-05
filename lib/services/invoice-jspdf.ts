@@ -136,7 +136,7 @@ class InvoiceServiceJsPDF {
       const boxWidth = (pageWidth - (3 * margin)) / 2;
       
       // Bill To Box
-      doc.roundedRect(margin, currentY, boxWidth, 35, 2, 2, 'F');
+      doc.roundedRect(margin, currentY, boxWidth, 45, 2, 2, 'F');
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
@@ -156,7 +156,7 @@ class InvoiceServiceJsPDF {
 
       // Ship To Box
       const shipToX = pageWidth - margin - boxWidth;
-      doc.roundedRect(shipToX, currentY, boxWidth, 35, 2, 2, 'F');
+      doc.roundedRect(shipToX, currentY, boxWidth, 45, 2, 2, 'F');
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(primaryColor.r, primaryColor.g, primaryColor.b);
@@ -168,17 +168,31 @@ class InvoiceServiceJsPDF {
       doc.text(String(invoiceData.shippingAddress.fullName), shipToX + 5, currentY + 14);
       
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
+      doc.setFontSize(7.5);
       let shipY = currentY + 19;
-      doc.text(String(invoiceData.shippingAddress.addressLine1), shipToX + 5, shipY);
-      shipY += 4;
+      // Split long address line if needed
+      const maxWidth = boxWidth - 10;
+      const addressLine1 = String(invoiceData.shippingAddress.addressLine1);
+      const splitAddress = doc.splitTextToSize(addressLine1, maxWidth);
+      splitAddress.forEach((line: string) => {
+        doc.text(line, shipToX + 5, shipY);
+        shipY += 3.5;
+      });
       if (invoiceData.shippingAddress.addressLine2) {
-        doc.text(String(invoiceData.shippingAddress.addressLine2), shipToX + 5, shipY);
-        shipY += 4;
+        const addressLine2 = String(invoiceData.shippingAddress.addressLine2);
+        const splitAddress2 = doc.splitTextToSize(addressLine2, maxWidth);
+        splitAddress2.forEach((line: string) => {
+          doc.text(line, shipToX + 5, shipY);
+          shipY += 3.5;
+        });
       }
       doc.text(String(invoiceData.shippingAddress.city) + ', ' + String(invoiceData.shippingAddress.state), shipToX + 5, shipY);
+      shipY += 3.5;
+      doc.text(String(invoiceData.shippingAddress.postalCode) + ', ' + String(invoiceData.shippingAddress.country), shipToX + 5, shipY);
+      shipY += 3.5;
+      doc.text('Ph: ' + String(invoiceData.shippingAddress.phoneNumber), shipToX + 5, shipY);
 
-      currentY += 45;
+      currentY += 55;
 
       // Items Table
       this.addItemsTable(doc, invoiceData, currentY, margin, pageWidth);
@@ -238,11 +252,11 @@ class InvoiceServiceJsPDF {
 
   private addItemsTable(doc: jsPDF, invoiceData: InvoiceData, startY: number, margin: number, pageWidth: number) {
     const colWidths = {
-      item: 12,
-      description: 85,
-      qty: 18,
-      price: 28,
-      total: 30
+      item: 10,
+      description: 75,
+      qty: 15,
+      price: 30,
+      total: 33
     };
 
     const primaryColor = { r: 220, g: 38, b: 38 };

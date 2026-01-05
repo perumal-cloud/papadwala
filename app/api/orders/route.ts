@@ -173,8 +173,8 @@ export async function POST(request: NextRequest) {
       notes: orderNotes,
       subtotal: orderTotal,
       tax: 0, // No tax for now
-      shippingCost: orderTotal < 500 ? 50 : 0, // Free shipping for orders above ₹500
-      total: orderTotal + (orderTotal < 500 ? 50 : 0),
+      shippingCost: 0, // Free shipping for all orders
+      total: orderTotal,
       status: 'pending',
       paymentStatus: 'pending',
       statusHistory: [{
